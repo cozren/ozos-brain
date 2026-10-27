@@ -14,6 +14,7 @@ from .routers import (
     me,
     setup,
     goals,
+    datapoints,
 )
 
 app = FastAPI(title="OZOS Brain")
@@ -39,6 +40,7 @@ app.include_router(intel_agents.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
 app.include_router(setup.router, prefix="/api")
 app.include_router(goals.router, prefix="/api")
+app.include_router(datapoints.router, prefix="/api")
 
 
 @app.get("/health")
