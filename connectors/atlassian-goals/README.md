@@ -2,6 +2,15 @@
 
 Connects Claude Code to the Atlassian Atlas Goals API. Ask Claude to list your goals, check key results, read check-ins, and update goal status — all without opening a browser.
 
+## Two ways in
+
+- **The app**: Setup → Goals saves the credentials and **Sync now** (or *Sync Atlassian* on
+  the Goals & Tasks page) calls `POST /api/goals/sync`, which uses this directory's
+  `api_client.AtlassianGoalsClient` to pull every goal into `<vault>/.ozos/goals.json`.
+  Synced goals are shown read-only next to the goals you add by hand.
+- **The MCP server** (below): for asking about and updating goals from a Claude Code
+  session.
+
 ## How it works
 
 Uses the Atlassian GraphQL gateway at `https://{subdomain}.atlassian.net/gateway/api/graphql` with Basic auth (email + API token). This is the correct API per [Atlassian's Goals integration docs](https://support.atlassian.com/platform-experiences/docs/integrate-and-update-third-party-metrics-with-atlassian-goals/).

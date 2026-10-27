@@ -141,3 +141,12 @@ def test_define_goals_is_a_real_item():
 def test_vault_template_has_empty_goals_file():
     tpl = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "goals.json").read_text())
     assert tpl == {"goals": [], "sync": None}
+
+
+def test_goals_docs_no_longer_defer_to_phase_3():
+    setup_md = (REPO_ROOT / "connectors" / "atlassian-goals" / "setup.md").read_text()
+    assert "Phase 3" not in setup_md and "Sync" in setup_md
+    skill = (REPO_ROOT / ".claude" / "skills" / "ozos-setup" / "SKILL.md").read_text()
+    assert "define-goals" in skill and "goals_sync" in skill and "/api/goals/sync" in skill
+    readme = (REPO_ROOT / "connectors" / "atlassian-goals" / "README.md").read_text()
+    assert "/api/goals/sync" in readme

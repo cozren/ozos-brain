@@ -1,15 +1,17 @@
 # Atlassian connector — setup
 
 One Atlassian API token serves two setup items: **Confluence** (search in the chat, needs
-three variables) and **Goals** (the Atlassian Goals MCP server, needs two more). The
-`/ozos-setup` skill walks through this file for both; the Goals page itself arrives in
-Phase 3, so the Goals item can stay `skipped` after the connection works.
+three variables) and **Goals** (the Goals page pulls your goals in, needs one more). The
+`/ozos-setup` skill walks through this file for both.
 
 ## What it gives you
 
 - **Confluence**: the floating chat can search Confluence and open pages when asked.
-- **Goals**: in a Claude Code session opened in the engine, the `atlassian-goals` MCP
-  server answers "show me my goals", "what is at risk", "update goal X to on_track".
+- **Goals**: the Goals & Tasks page lists your Atlassian goals with status, progress,
+  owner and target next to the goals you add by hand. **Sync Atlassian** pulls them again
+  whenever you like. In a Claude Code session opened in the engine, the `atlassian-goals`
+  MCP server also answers "show me my goals", "what is at risk", "update goal X to
+  on_track".
 
 ## What you need
 
@@ -39,25 +41,32 @@ Phase 3, so the Goals item can stay `skipped` after the connection works.
    Without the app, `/ozos-setup` writes the same lines through
    `setup_actions.write_env`, or add them by hand.
 
-2. **Goals** — add the one remaining line to the vault `.env` by hand (Phase 3 adds the
-   form):
+2. **Goals** — Setup → Goals → *Connect Atlassian Goals* shows the same three fields plus
+   `ATLASSIAN_CLOUD_ID`; fill in whatever is still *not set* and press *Save to .env*.
+   Then press **Sync now**. The app pulls your goals into `<vault>/.ozos/goals.json`
+   and marks the item done. Without the app, `/ozos-setup` calls
+   `goals_sync.sync_goals()` in-process.
 
-   ```
-   ATLASSIAN_CLOUD_ID=...
-   ```
+   Goals pulled this way are read-only in OZOS (change them in Atlassian and sync
+   again); goals you add by hand on the same page are fully editable.
 
-   The engine's project-level `.mcp.json` already registers
-   `connectors/atlassian-goals/server.py`; restart Claude Code once so it starts.
-   Dependencies: `pip3 install -r connectors/atlassian-goals/requirements.txt`.
+   For the MCP server in Claude Code: the engine's project-level `.mcp.json` already
+   registers `connectors/atlassian-goals/server.py`; restart Claude Code once so it
+   starts. Dependencies: `pip3 install -r connectors/atlassian-goals/requirements.txt`.
 
-3. Mark the items: Confluence marks itself `done` when all three variables are set. For
-   Goals run `./ozos setup mark define-goals skipped --notes "connector verified; goals page in Phase 3"`
-   or leave it open.
+3. Mark the items: Confluence marks itself `done` when all three variables are set; Goals
+   marks itself `done` after the first successful sync or the first goal added by hand.
+   No Atlassian goals? Skip the connector and add goals by hand, or
+   `./ozos setup mark define-goals skipped --notes "no goals tool here"`.
 
 ## How to verify
 
 - **Confluence**: in the app's chat ask *"search Confluence for onboarding"*. A list of
   pages means the token works; `ATLASSIAN_* not set` names the missing variable.
-- **Goals**: in a Claude Code session say *"Test my Atlassian connection"*. The MCP tool
-  `test_connection` replies with your account; `Authentication failed` means the email or
-  token is wrong, a `404` means the subdomain is wrong.
+- **Goals**: open Goals & Tasks; after *Sync Atlassian* the board lists your goals with an
+  `Atlassian` badge and the Setup item reads *Done*. A `422 … is not set` names the
+  missing variable; `Authentication failed` means the email or token is wrong; a `404`
+  means the subdomain is wrong. A failed sync flips the Setup item to *Needs attention*
+  until the next sync succeeds.
+- **MCP**: in a Claude Code session say *"Test my Atlassian connection"*; the
+  `test_connection` tool replies with your account.
