@@ -8,6 +8,8 @@ vi.mock('../../api', () => ({
     getSetup: (...a: unknown[]) => getSetup(...a),
     setSetupStatus: vi.fn(),
     dismissSetup: vi.fn(),
+    getSetupEnv: vi.fn().mockResolvedValue({}),
+    getSetupGmail: vi.fn().mockResolvedValue(null),
   },
 }))
 

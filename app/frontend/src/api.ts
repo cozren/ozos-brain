@@ -33,6 +33,9 @@ import type {
 import type { DataHubLayout } from './types/datahub'
 import type {
   CyclePayload,
+  GmailStatus,
+  Reminder,
+  RoutingPayload,
   SetupItem,
   SetupStatus,
   SetupView,
@@ -638,6 +641,57 @@ export const api = {
       body: JSON.stringify(payload),
     }).then((r) => {
       if (!r.ok) throw new Error(`Save cycle failed: ${r.status}`)
+      return r.json()
+    }),
+
+  getSetupEnv: (): Promise<Record<string, boolean>> =>
+    fetch(`${BASE}/setup/env`).then((r) => {
+      if (!r.ok) throw new Error(`Load env status failed: ${r.status}`)
+      return r.json()
+    }),
+
+  setSetupEnv: (vars: Record<string, string>): Promise<string[]> =>
+    fetch(`${BASE}/setup/env`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vars }),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Write env failed: ${r.status}`)
+      return r.json().then((b: { set: string[] }) => b.set)
+    }),
+
+  addSetupFolder: (
+    itemId: string,
+    folder: string
+  ): Promise<{ id: string; label: string; path: string }> =>
+    fetch(`${BASE}/setup/folders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: itemId, folder }),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Create folder failed: ${r.status}`)
+      return r.json()
+    }),
+
+  setSetupRouting: (payload: RoutingPayload): Promise<unknown> =>
+    fetch(`${BASE}/setup/routing`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Save routing failed: ${r.status}`)
+      return r.json()
+    }),
+
+  getSetupGmail: (): Promise<GmailStatus> =>
+    fetch(`${BASE}/setup/gmail`).then((r) => {
+      if (!r.ok) throw new Error(`Load Gmail status failed: ${r.status}`)
+      return r.json()
+    }),
+
+  getSetupReminders: (): Promise<Reminder[]> =>
+    fetch(`${BASE}/setup/reminders`).then((r) => {
+      if (!r.ok) throw new Error(`Load reminders failed: ${r.status}`)
       return r.json()
     }),
 
