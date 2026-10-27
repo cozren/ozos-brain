@@ -28,6 +28,7 @@ SCRUB_EXCLUDE = (
     "__pycache__",
     ".pytest_cache",
     ".ruff_cache",
+    ".superpowers",  # plan-execution scratch, gitignored
 )
 
 

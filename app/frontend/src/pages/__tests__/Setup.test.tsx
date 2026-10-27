@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { vi, test, expect, beforeEach } from 'vitest'
 import type { SetupView } from '../../types/setup'
 
@@ -90,4 +90,18 @@ test('shows an error line when the backend is unreachable', async () => {
   getSetup.mockRejectedValue(new Error('boom'))
   render(<Setup />)
   await waitFor(() => expect(screen.getByText('Could not load setup')).toBeInTheDocument())
+})
+
+test('clicking Skip updates the row from the backend response', async () => {
+  getSetup.mockResolvedValue(view)
+  const { api } = await import('../../api')
+  ;(api.setSetupStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ...view.groups[1].items[0],
+    status: 'skipped',
+  })
+  render(<Setup />)
+  await waitFor(() => expect(screen.getByText('Granola')).toBeInTheDocument())
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }))
+  await waitFor(() => expect(screen.getByText('Skipped')).toBeInTheDocument())
+  expect(api.setSetupStatus).toHaveBeenCalledWith('granola', 'skipped')
 })

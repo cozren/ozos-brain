@@ -18,6 +18,9 @@ def test_scrub_skips_excluded_dirs(tmp_path):
     (tmp_path / "vault" / "n.md").write_text("examplecorp")
     (tmp_path / "node_modules").mkdir()
     (tmp_path / "node_modules" / "x.js").write_text("examplecorp")
+    # plan-execution scratch (gitignored; test logs there carry absolute paths)
+    (tmp_path / ".superpowers" / "sdd").mkdir(parents=True)
+    (tmp_path / ".superpowers" / "sdd" / "tests.log").write_text("examplecorp")
     terms = tmp_path / "t.txt"
     terms.write_text("examplecorp\n")
     assert scrub_check(tmp_path, terms) == []

@@ -3,7 +3,7 @@ import { ListChecks } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { SetupItemRow } from '../components/setup/SetupItemRow'
 import { api } from '../api'
-import type { SetupView } from '../types/setup'
+import type { SetupItem, SetupStatus, SetupView } from '../types/setup'
 
 // The setup journal: every onboarding item grouped, with its status. Items are
 // independent and nothing gates anything; the page is meant to stay half-done
@@ -25,6 +25,36 @@ export function Setup() {
   useEffect(() => {
     load()
   }, [load])
+
+  // Replace one item in place from whatever the backend returns (its status may
+  // be derived, so the response wins over what was clicked).
+  const replaceItem = useCallback((updated: SetupItem) => {
+    setView((v) => {
+      if (!v) return v
+      const groups = v.groups.map((g) => ({
+        ...g,
+        items: g.items.map((it) => (it.id === updated.id ? updated : it)),
+      }))
+      const all = groups.flatMap((g) => g.items)
+      const done = all.filter((it) => it.status === 'done').length
+      const skipped = all.filter((it) => it.status === 'skipped').length
+      return {
+        ...v,
+        groups,
+        summary: { ...v.summary, done, open: all.length - done - skipped },
+      }
+    })
+  }, [])
+
+  const handleStatus = useCallback(
+    (id: string, status: SetupStatus) => {
+      api
+        .setSetupStatus(id, status)
+        .then(replaceItem)
+        .catch(() => setError('Could not update item'))
+    },
+    [replaceItem]
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -75,7 +105,7 @@ export function Setup() {
               style={{ boxShadow: 'none', border: '1px solid rgba(0,255,255,0.18)' }}
             >
               {group.items.map((item, i) => (
-                <SetupItemRow key={item.id} item={item} first={i === 0} />
+                <SetupItemRow key={item.id} item={item} first={i === 0} onStatus={handleStatus} />
               ))}
             </div>
           </section>
