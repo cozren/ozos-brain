@@ -1,6 +1,6 @@
 import { HINT } from './formStyles'
 
-const PHASE: Record<string, number> = { 'define-goals': 3, 'first-data-point': 4 }
+const PHASE: Record<string, number> = { 'first-data-point': 4 }
 
 // Items whose real form arrives in a later phase; skipping them is first-class.
 export function PlaceholderPanel({ itemId }: { itemId: string }) {

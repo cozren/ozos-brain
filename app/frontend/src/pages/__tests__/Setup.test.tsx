@@ -11,6 +11,9 @@ vi.mock('../../api', () => ({
     getSetupEnv: vi.fn().mockResolvedValue({}),
     getSetupGmail: vi.fn().mockResolvedValue(null),
     getSetupRouting: vi.fn().mockResolvedValue(null),
+    getGoals: vi.fn().mockResolvedValue(null),
+    syncGoals: vi.fn(),
+    addGoal: vi.fn(),
   },
   ApiError: class ApiError extends Error {},
 }))

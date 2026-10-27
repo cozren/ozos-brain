@@ -9,6 +9,7 @@ import { RoutingForm } from './RoutingForm'
 import { McpPanel } from './McpPanel'
 import { GmailPanel } from './GmailPanel'
 import { PlaceholderPanel } from './PlaceholderPanel'
+import { GoalsPanel } from './GoalsPanel'
 import { CODE, HINT } from './formStyles'
 
 interface Props {
@@ -200,6 +201,8 @@ export function SetupItemBody({ item, onChanged, cadence }: Props) {
           }}
         />
       )
+    case 'goals':
+      return <GoalsPanel item={item} onChanged={onChanged} />
     case 'placeholder':
       return <PlaceholderPanel itemId={item.id} />
     default:

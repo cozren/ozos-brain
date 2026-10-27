@@ -7,6 +7,13 @@ vi.mock('../../../api', () => ({
   api: {
     getSetupRouting: (...a: unknown[]) => getSetupRouting(...a),
     setSetupRouting: vi.fn(),
+    getSetupEnv: vi.fn().mockResolvedValue({}),
+    getGoals: vi.fn().mockResolvedValue({
+      goals: [],
+      sync: null,
+      connector: { configured: false, missing: [] },
+      statuses: [],
+    }),
   },
   ApiError: class ApiError extends Error {},
 }))
@@ -57,4 +64,14 @@ test('when the current routing cannot be loaded, no form is offered (saving woul
     ).toBeInTheDocument()
   )
   expect(screen.queryByLabelText('Folders (one per line)')).toBeNull()
+})
+
+test('the goals kind renders the Goals panel with its sync button', async () => {
+  render(
+    <SetupItemBody
+      item={{ ...item, id: 'define-goals', kind: 'goals', env: ['ATLASSIAN_CLOUD_ID'] }}
+      onChanged={() => {}}
+    />
+  )
+  expect(await screen.findByRole('button', { name: 'Sync now' })).toBeInTheDocument()
 })

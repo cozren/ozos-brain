@@ -12,6 +12,7 @@ export type SetupKind =
   | 'folder'
   | 'people'
   | 'cycle'
+  | 'goals'
   | 'placeholder'
 
 export interface SetupDerived {
