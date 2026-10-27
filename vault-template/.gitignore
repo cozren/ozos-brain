@@ -5,6 +5,7 @@ credentials.json
 *-key.json
 token.json
 .ozos/runs/
+.ozos/datapoint-cache/
 .ozos/knowledge-tag-index.json
 .ozos/knowledge-stars.json
 .ozos/knowledge-opens.json

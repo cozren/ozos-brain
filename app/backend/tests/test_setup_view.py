@@ -14,6 +14,8 @@ def view_env(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_view, "discover_mcps", lambda: {"remote": [], "local": []})
     monkeypatch.setattr(setup_view, "load_vitals", lambda: [])
     monkeypatch.setattr(setup_view, "load_goals_sync", lambda: None)
+    monkeypatch.setattr(setup_view, "load_datapoints_health", lambda: None)
+    monkeypatch.setattr(setup_view, "count_datapoints", lambda: 0)
 
 
 def _items(view: dict) -> dict:
@@ -111,3 +113,33 @@ def test_failed_goals_sync_turns_done_item_into_needs_attention(view_env, monkey
         setup_view, "load_goals_sync", lambda: {"id": "goals-sync", "status": "ok", "message": ""}
     )
     assert _items(build_view())["define-goals"]["status"] == "done"
+
+
+def test_data_item_derives_done_from_count_and_needs_attention_from_health(view_env, monkeypatch):
+    assert _items(build_view())["first-data-point"]["status"] == "not_started"
+    monkeypatch.setattr(setup_view, "count_datapoints", lambda: 2)
+    it = _items(build_view())["first-data-point"]
+    assert it["status"] == "done" and it["derived"]["datapoints"] == {"count": 2}
+    monkeypatch.setattr(
+        setup_view,
+        "load_datapoints_health",
+        lambda: {"id": "datapoints-refresh", "status": "fail", "message": "A: boom"},
+    )
+    it = _items(build_view())["first-data-point"]
+    assert it["status"] == "needs_attention"
+    assert it["derived"] == {"datapoints": {"count": 2}, "vital": {"status": "fail"}}
+    set_status("first-data-point", "skipped")
+    assert _items(build_view())["first-data-point"]["status"] == "skipped"
+
+
+def test_synthetic_health_wins_over_file_vital(view_env, monkeypatch):
+    monkeypatch.setattr(setup_view, "count_datapoints", lambda: 1)
+    monkeypatch.setattr(
+        setup_view, "load_vitals", lambda: [{"id": "datapoints-refresh", "status": "ok"}]
+    )
+    monkeypatch.setattr(
+        setup_view,
+        "load_datapoints_health",
+        lambda: {"id": "datapoints-refresh", "status": "fail", "message": "x"},
+    )
+    assert _items(build_view())["first-data-point"]["status"] == "needs_attention"

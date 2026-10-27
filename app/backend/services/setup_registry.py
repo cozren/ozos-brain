@@ -12,10 +12,11 @@ Each item:
   setup_doc     repo-relative markdown the /ozos-setup skill walks through, or None
   kind          which form the page renders:
                 profile | gmail | manual | routing | mcp | env | folder | people |
-                cycle | goals | placeholder
+                cycle | goals | data
   vital         vitals.json id whose failure/staleness turns a done item into
                 needs_attention, or None ("goals-sync" is synthesised by setup_view
-                from the last goals sync, not read from vitals.json)
+                from the last goals sync; "datapoints-refresh" is both a real vital
+                and a synthetic health record built from the data point cache)
   env           .env variable names the item's form may write (the whitelist)
   mcp_match     lowercase substring matched against `claude mcp list` names
   default_folder  default knowledge-hub folder name for folder items
@@ -200,11 +201,14 @@ ITEMS: list[dict] = [
     _item(
         "first-data-point",
         "data",
-        "First data point",
-        "Data points (Metabase card, SQL, CSV) feed Data Hub tiles in Phase 4.",
-        "(Phase 4)",
-        "placeholder",
+        "Data points",
+        "Define a data point (Metabase card, SQL against a SQLite file, or a CSV in the "
+        "vault); tiles on the Data Hub and goal measures can only show data points.",
+        ".ozos/datapoints.json, .env (METABASE_URL, METABASE_API_KEY)",
+        "data",
         setup_doc="connectors/metabase/setup.md",
+        vital="datapoints-refresh",
+        env=["METABASE_URL", "METABASE_API_KEY"],
     ),
     _item(
         "interviews-folder",

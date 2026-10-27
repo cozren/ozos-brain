@@ -141,6 +141,8 @@ def test_define_goals_is_a_real_item():
         "ATLASSIAN_TOKEN",
         "ATLASSIAN_SUBDOMAIN",
         "ATLASSIAN_CLOUD_ID",
+        "METABASE_URL",
+        "METABASE_API_KEY",
     ]
 
 
@@ -156,3 +158,17 @@ def test_goals_docs_no_longer_defer_to_phase_3():
     assert "define-goals" in skill and "goals_sync" in skill and "/api/goals/sync" in skill
     readme = (REPO_ROOT / "connectors" / "atlassian-goals" / "README.md").read_text()
     assert "/api/goals/sync" in readme
+
+
+def test_first_data_point_is_a_real_item():
+    it = item("first-data-point")
+    assert it["kind"] == "data" and it["vital"] == "datapoints-refresh"
+    assert it["env"] == ["METABASE_URL", "METABASE_API_KEY"]
+    assert it["setup_doc"] == "connectors/metabase/setup.md"
+    assert not any(i["kind"] == "placeholder" for i in ITEMS)
+
+
+def test_vault_template_has_empty_datapoints_file_and_ignores_cache():
+    tpl = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "datapoints.json").read_text())
+    assert tpl == {"datapoints": []}
+    assert ".ozos/datapoint-cache/" in (REPO_ROOT / "vault-template" / ".gitignore").read_text()

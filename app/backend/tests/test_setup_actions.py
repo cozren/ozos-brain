@@ -223,8 +223,14 @@ def test_env_write_whitelist_and_no_echo(vault):
         "ATLASSIAN_TOKEN": True,
         "ATLASSIAN_SUBDOMAIN": True,
         "ATLASSIAN_CLOUD_ID": False,
+        "METABASE_URL": False,
+        "METABASE_API_KEY": False,
     }
     assert load_state()["items"]["confluence"]["status"] == "done"
+    # Credentials never mark Data points done either: the first point does (derived).
+    write_env({"METABASE_URL": "https://mb.yourcompany.com"})
+    assert env_status()["METABASE_URL"] is True
+    assert load_state()["items"]["first-data-point"]["status"] == "not_started"
     # Saving credentials never marks Goals done: only the first goal or the first
     # successful sync does (see goals.add_goal / goals.replace_synced).
     assert load_state()["items"]["define-goals"]["status"] == "not_started"
@@ -258,6 +264,8 @@ def test_env_status_without_file(vault):
         "ATLASSIAN_TOKEN": False,
         "ATLASSIAN_SUBDOMAIN": False,
         "ATLASSIAN_CLOUD_ID": False,
+        "METABASE_URL": False,
+        "METABASE_API_KEY": False,
     }
 
 
