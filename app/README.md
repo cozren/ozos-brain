@@ -24,7 +24,7 @@ remove the flag; by default it reloads on edit.
 | People Hub | People YAML under `<vault>/people-hub/`, review cycles, documents |
 | Knowledge Hub | Folder tree over `<vault>/knowledge-hub/` sources, tags, stars, preview |
 | Setup | The onboarding checklist: connect sources, add stakeholders, pick a review cycle (`/api/setup`) |
-| Goals & Tasks | Personal tasks; goals arrive in Phase 3 |
+| Goals & Tasks | Goals by hand or synced from Atlassian (`/api/goals`, `<vault>/.ozos/goals.json`), plus personal tasks |
 | Data Hub | User-defined tabs of dashboard tiles; empty until data points exist |
 | Reporting | Daily digest, meeting notes archive, intel agents |
 | Control Tower / System Health | Vitals, MCPs, commands, hooks, test board |

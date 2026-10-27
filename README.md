@@ -67,11 +67,13 @@ uncollected tests, and any forbidden term found by `./ozos scrub-check`.
 
 ## Status
 
-Phase 2 of the extraction is in: the engine runs against an empty vault and the
+Phase 3 of the extraction is in. The engine runs against an empty vault; the
 **Setup page** (plus `/ozos-setup` and `./ozos setup`) is the living checklist for
 connecting sources, adding stakeholders and choosing a review cycle, with a progress badge
-and cadence reminders on Home. Data Hub and Goals are still empty states. Next up: goals
-(Phase 3), data points for the Data Hub (Phase 4), and the public README (Phase 5).
+and cadence reminders on Home (Phase 2); and **Goals** are real: add them by hand or pull
+them from the Atlassian Goals connector into the vault, shown as a board on Goals & Tasks
+(Phase 3). Data Hub is still an empty state. Next up: data points for the Data Hub and the
+goal-to-data-point binding (Phase 4), then the public README (Phase 5).
 
 ## License
 

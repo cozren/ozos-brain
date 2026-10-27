@@ -118,7 +118,13 @@ def test_setup_guide_describes_the_setup_page():
     assert "Until the Setup page ships" not in guide
     assert "## A. JSON reference" in guide
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    assert "Phase 2" in readme and "Setup page" in readme
+    assert "Setup page" in readme
+    # Phase 3: the guide has a Goals section and a goals.json reference.
+    assert "## 8. Goals" in guide and "### A.6 `goals.json`" in guide
+    assert "Placeholders until Phases 3 and 4" not in guide
+    assert "Phase 3" in readme and "Goals" in readme
+    app_readme = (REPO_ROOT / "app" / "README.md").read_text(encoding="utf-8")
+    assert "arrive in Phase 3" not in app_readme and "/api/goals" in app_readme
 
 
 def test_define_goals_is_a_real_item():

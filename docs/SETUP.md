@@ -158,11 +158,13 @@ What each group needs, in the recommended order for a new job:
 | Notion/wiki exports, PDF drop folder, interviews, surveys | Name a folder; it is created under `knowledge-hub/` and registered as a knowledge source. | — |
 | Add a stakeholder | See section 6. | — |
 | Review cycle | See section 7. | — |
-| Goals, First data point | Placeholders until Phases 3 and 4; skipping them is fine. | `connectors/atlassian-goals/setup.md`, `connectors/metabase/setup.md` |
+| Goals | Save the four `ATLASSIAN_*` lines and press *Sync now*, or add a goal by hand. See section 8. | `connectors/atlassian-goals/setup.md` |
+| First data point | Placeholder until Phase 4; skipping it is fine. | `connectors/metabase/setup.md` |
 
 A *Done* meeting-notes item flips to **Needs attention** by itself when the
 `meeting-notes` vital on the Control Tower fails or goes stale, so a broken token shows up
-on the Setup page without anyone checking.
+on the Setup page without anyone checking. The Goals item does the same when its last
+Atlassian sync failed.
 
 Daily digest and intel agents are not setup items: the digest runs with
 `python3 tools/daily-digest/digest.py` (or `/daily-digest`); intel agents read
@@ -207,28 +209,57 @@ Either choice marks the item done; you can reopen it later.
 
 ---
 
-## 8. Daily use
+## 8. Goals
+
+Goals live in `<vault>/.ozos/goals.json` and show on **Goals & Tasks → Goals** as a board:
+one row per goal with a status chip (*On track*, *At risk*, *Off track*, *Complete*,
+*Cancelled*, *Pending*), a progress bar when the goal reports one, owner and target. Rows
+that need attention sort to the top. Two ways to fill it, mixable:
+
+- **By hand.** The *Add a goal* form at the bottom of the board (or on Setup → Goals):
+  title, owner, target date, status, progress. These goals are editable in place: change
+  the status from the select, type a new progress, *Delete* when it no longer applies.
+- **From Atlassian Goals.** Setup → Goals → *Connect Atlassian Goals*: the same three
+  `ATLASSIAN_*` variables as Confluence plus `ATLASSIAN_CLOUD_ID`
+  (`connectors/atlassian-goals/setup.md` says where to find it), *Save to .env*, then
+  **Sync now**. Every goal in your Atlassian site lands on the board with an `Atlassian`
+  badge. They are **read-only here**: change them in Atlassian and press *Sync Atlassian*
+  on the board again. A sync replaces the Atlassian set wholesale, so a goal removed there
+  disappears here; goals added by hand are never touched.
+
+The first goal added, or the first successful sync, marks the Setup item *Done*. A failed
+sync (bad token, wrong subdomain, network) is remembered in `goals.json` and shows the item
+as **Needs attention** until the next sync succeeds; the board shows the connector's
+message. No goals tool at the new company? Skip the connector and use the form.
+
+Each goal carries an empty `data_point_id`; Phase 4 lets you bind a goal to a Data Hub data
+point so the board can show the measured value next to the target.
+
+---
+
+## 9. Daily use
 
 | Do | How |
 |---|---|
 | Start the app | `bash app/run.sh` (or `/ozos-brain` in Claude Code) |
 | Work the next setup item | `/ozos-setup` in a Claude Code session, or the Setup page |
 | Sync notes from both sources | `/sync-notes` in a Claude Code session |
+| Pull goals from Atlassian again | *Sync Atlassian* on Goals & Tasks, or `/ozos-setup define-goals` |
 | Save a session summary | `/save-session` (writes to the vault's `docs/learnings.md`) |
 | Commit engine changes | `/git`; the pre-commit gate runs tests and the scrub check |
 | Keep the term list current | add new names, hosts and IDs to `~/.ozos/scrub-terms.txt` the day you learn them |
 
 ---
 
-## 9. What is not here yet
+## 10. What is not here yet
 
-Phases 3 to 5 of the design: a Goals page (by hand or from the Atlassian Goals connector),
-data points for the Data Hub (Metabase card, SQL or CSV), and the public README. Their
-Setup items exist as placeholders you can skip.
+Phases 4 and 5 of the design: data points for the Data Hub (Metabase card, SQL or CSV),
+the goal-to-data-point binding, and the public README. The *First data point* Setup item
+is a placeholder you can skip.
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 - **"Gmail not configured" at session start** — expected until the *Gemini notes via Gmail* item in Setup is done.
 - **App shows "NEVER RUN" for a vital** — the vital has not written output into the
@@ -245,6 +276,14 @@ Setup items exist as placeholders you can skip.
   Control Tower, run the vital, and the chip recovers on its own.
 - **An MCP item stays "Not detected yet"** — the app reads `claude mcp list` once at
   start (`app/run.sh` caches it); authenticate in `/mcp`, then restart `app/run.sh`.
+- **Sync Atlassian answers `ATLASSIAN_… is not set`** — that variable is empty in
+  `<vault>/.env`; fill it on Setup → Goals (the app re-reads the file on every sync, no
+  restart needed).
+- **The Goals item says "Needs attention"** — the last Atlassian sync failed; the
+  board shows the connector's message (`Authentication failed` = email or token, `404` =
+  subdomain). Fix the variable and sync again; the chip recovers by itself.
+- **A synced goal cannot be edited or deleted** — by design; change it in Atlassian and
+  sync again. Only goals added by hand are editable in OZOS.
 
 ---
 
@@ -304,5 +343,40 @@ See `vault-template/people-hub/` for both shapes with a comment on every field.
 
 ### A.5 `.env`
 
-The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN` and
-`ATLASSIAN_SUBDOMAIN`. Everything else in section 4 is edited by hand.
+The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBDOMAIN` and
+`ATLASSIAN_CLOUD_ID`. Everything else in section 4 is edited by hand.
+
+### A.6 `goals.json`
+
+```json
+{
+  "goals": [
+    {
+      "id": "grow-activation",
+      "title": "Grow activation",
+      "description": "",
+      "owner": "Pat Example",
+      "status": "on_track",
+      "progress": 42,
+      "target_date": "2027-03-31",
+      "source": "manual",
+      "external_id": null,
+      "data_point_id": null,
+      "updated_at": "2026-…",
+      "synced_at": null
+    }
+  ],
+  "sync": { "last_run": "2026-…", "status": "ok", "message": "", "count": 7 }
+}
+```
+
+- `id`: the slug of the title for manual goals; `atlassian-<key>` for synced ones.
+- `status`: one of `on_track`, `at_risk`, `off_track`, `complete`, `cancelled`, `pending`
+  (the Atlassian vocabulary; an unknown remote state becomes `pending`).
+- `progress`: `0`–`100` or `null`; `target_date`: free text (ISO date from the form, a
+  label such as a quarter from Atlassian).
+- `source` / `external_id`: `manual`, or `atlassian` with the goal's ARI. Synced goals
+  are replaced on every sync; only `data_point_id` survives from the previous copy.
+- `data_point_id`: reserved for Phase 4; `null` until a data point is bound.
+- `sync`: `null` until the first sync; `status` `fail` is what turns the Setup item into
+  *Needs attention*.

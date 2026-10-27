@@ -52,7 +52,7 @@ graphify-out/           — Derived knowledge graph (gitignored; never edit manu
 ```
 
 A vault looks like: `.ozos/` (vitals, knowledge sources, meeting routing, layouts,
-setup state), `.env` (credentials), `people-hub/` (people YAML, cycles), `knowledge-hub/`
+setup state, goals), `.env` (credentials), `people-hub/` (people YAML, cycles), `knowledge-hub/`
 (notes, digests, learning), `docs/` (that company's PRDs and learnings).
 
 ## Conventions
