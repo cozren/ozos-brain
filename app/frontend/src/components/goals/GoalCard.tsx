@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { Goal, GoalPatch, GoalStatus } from '../../types/goals'
+import type { DataPoint, DataPointValue } from '../../types/datapoints'
 import { STATUS_COLOR, STATUS_LABEL, STATUS_ORDER } from '../../lib/goals'
+import { formatNumber, numberOf } from '../../lib/datapoints'
 import { GoalStatusChip } from './GoalStatusChip'
+
+export interface GoalMeasure {
+  dp: DataPoint
+  value: DataPointValue
+}
 
 interface Props {
   goal: Goal
@@ -9,6 +16,17 @@ interface Props {
   // When both are given and the goal is manual, the card becomes editable.
   onPatch?: (id: string, patch: GoalPatch) => void
   onDelete?: (id: string) => void
+  // When given (with onPatch), every goal gets a data point selector: binding is
+  // the one field a synced goal accepts too.
+  datapoints?: DataPoint[]
+  // The bound data point's latest value, shown beside progress; never written back.
+  measure?: GoalMeasure
+}
+
+function measureText(m: GoalMeasure): string {
+  const { current } = numberOf(m.value)
+  const bad = m.value.error || m.value.fetched_at === null || current === null
+  return `${bad ? 'no value' : formatNumber(current, m.dp.unit)} · ${m.dp.name}`
 }
 
 const META: React.CSSProperties = {
@@ -48,9 +66,14 @@ const DELETE: React.CSSProperties = {
 // goal reports one, then owner, target and (for synced goals) the source.
 // Manual goals with handlers get a status select, a progress input and Delete;
 // synced goals stay read-only (they are changed in their source).
-export function GoalCard({ goal, first = false, onPatch, onDelete }: Props) {
+export function GoalCard({ goal, first = false, onPatch, onDelete, datapoints, measure }: Props) {
   const color = STATUS_COLOR[goal.status]
   const editable = goal.source === 'manual' && !!onPatch && !!onDelete
+  const bindable = !!datapoints && !!onPatch
+  const boundId =
+    goal.data_point_id && datapoints?.some((d) => d.id === goal.data_point_id)
+      ? goal.data_point_id
+      : ''
   const [progressDraft, setProgressDraft] = useState(
     goal.progress === null ? '' : String(goal.progress)
   )
@@ -166,6 +189,11 @@ export function GoalCard({ goal, first = false, onPatch, onDelete }: Props) {
         ) : (
           goal.progress !== null && <span style={META}>{goal.progress}%</span>
         )}
+        {measure && (
+          <span data-testid="goal-measure" style={{ ...META, color: 'var(--neon-cyan)' }}>
+            {measureText(measure)}
+          </span>
+        )}
         {goal.owner && <span style={META}>owner {goal.owner}</span>}
         {goal.target_date && <span style={META}>target {goal.target_date}</span>}
         {goal.source === 'atlassian' && (
@@ -182,6 +210,21 @@ export function GoalCard({ goal, first = false, onPatch, onDelete }: Props) {
           >
             Atlassian
           </span>
+        )}
+        {bindable && (
+          <select
+            aria-label="Data point"
+            value={boundId}
+            onChange={(e) => onPatch!(goal.id, { data_point_id: e.target.value || null })}
+            style={{ ...CONTROL, fontSize: 10 }}
+          >
+            <option value="">No data point</option>
+            {datapoints!.map((dp) => (
+              <option key={dp.id} value={dp.id}>
+                {dp.name}
+              </option>
+            ))}
+          </select>
         )}
         {editable && (
           <button

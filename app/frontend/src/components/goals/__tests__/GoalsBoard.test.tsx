@@ -7,6 +7,8 @@ const syncGoals = vi.fn()
 const addGoal = vi.fn()
 const updateGoal = vi.fn()
 const deleteGoal = vi.fn()
+const getDataPoints = vi.fn()
+const getDataPointValue = vi.fn()
 vi.mock('../../../api', () => ({
   api: {
     getGoals: (...a: unknown[]) => getGoals(...a),
@@ -14,6 +16,8 @@ vi.mock('../../../api', () => ({
     addGoal: (...a: unknown[]) => addGoal(...a),
     updateGoal: (...a: unknown[]) => updateGoal(...a),
     deleteGoal: (...a: unknown[]) => deleteGoal(...a),
+    getDataPoints: (...a: unknown[]) => getDataPoints(...a),
+    getDataPointValue: (...a: unknown[]) => getDataPointValue(...a),
   },
   ApiError: class ApiError extends Error {
     status: number
@@ -50,12 +54,22 @@ const empty: GoalsPayload = {
   statuses: ['on_track', 'at_risk', 'off_track', 'complete', 'cancelled', 'pending'],
 }
 
+const NO_POINTS = {
+  datapoints: [],
+  connector: { configured: false, missing: [] },
+  kinds: [],
+  displays: [],
+  refreshes: [],
+}
+
 beforeEach(() => {
   getGoals.mockReset()
   syncGoals.mockReset()
   addGoal.mockReset()
   updateGoal.mockReset()
   deleteGoal.mockReset()
+  getDataPoints.mockReset().mockResolvedValue(NO_POINTS)
+  getDataPointValue.mockReset()
 })
 
 test('empty state copy, and no sync button when the connector is not configured', async () => {
@@ -137,4 +151,44 @@ test('deleting a goal removes it from the list', async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'Delete Alpha' }))
   await waitFor(() => expect(deleteGoal).toHaveBeenCalledWith('a'))
   await waitFor(() => expect(screen.queryByText('Alpha')).toBeNull())
+})
+
+test('bound goals load their data point value once and show the measure', async () => {
+  const point = {
+    id: 'weekly-signups',
+    name: 'Weekly signups',
+    source: { kind: 'metabase', card_id: 42 },
+    display: 'number',
+    refresh: 'daily',
+    unit: 'users',
+    created_at: '',
+  }
+  getGoals.mockResolvedValue({
+    ...empty,
+    goals: [
+      { ...goal('a', 'on_track', 'Alpha'), data_point_id: 'weekly-signups' },
+      { ...goal('b', 'on_track', 'Beta'), data_point_id: 'weekly-signups' },
+      { ...goal('c', 'on_track', 'Gamma'), data_point_id: 'gone' },
+    ],
+  })
+  getDataPoints.mockResolvedValue({ ...NO_POINTS, datapoints: [point] })
+  getDataPointValue.mockResolvedValue({
+    id: 'weekly-signups',
+    fetched_at: '2026-01-01T00:00:00',
+    columns: ['n'],
+    rows: [[1234]],
+    error: null,
+  })
+  render(<GoalsBoard />)
+  await screen.findByText('Alpha')
+  await waitFor(() => expect(screen.getAllByTestId('goal-measure')).toHaveLength(2))
+  expect(getDataPointValue).toHaveBeenCalledTimes(1)
+  expect(getDataPointValue).toHaveBeenCalledWith('weekly-signups')
+  for (const m of screen.getAllByTestId('goal-measure')) {
+    expect(m).toHaveTextContent('1,234 users · Weekly signups')
+  }
+  // Gamma is bound to a deleted point: no measure, select back on "No data point".
+  const gamma = screen.getByText('Gamma').closest('[data-goal]') as HTMLElement
+  expect(within(gamma).queryByTestId('goal-measure')).toBeNull()
+  expect(within(gamma).getByLabelText('Data point')).toHaveValue('')
 })

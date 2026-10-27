@@ -71,3 +71,85 @@ test('a synced goal never exposes edit controls even with handlers', () => {
   expect(screen.queryByRole('button', { name: /Delete/ })).toBeNull()
   expect(screen.getByText('On track')).toBeInTheDocument()
 })
+
+// ── Phase 4: data point binding ───────────────────────────────────────────
+
+import type { DataPoint, DataPointValue } from '../../../types/datapoints'
+
+const POINT: DataPoint = {
+  id: 'weekly-signups',
+  name: 'Weekly signups',
+  source: { kind: 'metabase', card_id: 42 },
+  display: 'number',
+  refresh: 'daily',
+  unit: 'users',
+  created_at: '',
+}
+
+const VALUE: DataPointValue = {
+  id: 'weekly-signups',
+  fetched_at: '2026-01-01T00:00:00',
+  columns: ['n'],
+  rows: [[1234]],
+  error: null,
+}
+
+test('with data points, the card offers a Data point select that writes data_point_id', () => {
+  const onPatch = vi.fn()
+  render(<GoalCard goal={base} onPatch={onPatch} onDelete={vi.fn()} datapoints={[POINT]} />)
+  const select = screen.getByLabelText('Data point')
+  expect(screen.getByRole('option', { name: 'No data point' })).toBeInTheDocument()
+  fireEvent.change(select, { target: { value: 'weekly-signups' } })
+  expect(onPatch).toHaveBeenCalledWith('grow-activation', { data_point_id: 'weekly-signups' })
+  fireEvent.change(select, { target: { value: '' } })
+  expect(onPatch).toHaveBeenCalledWith('grow-activation', { data_point_id: null })
+})
+
+test('a synced goal also gets the Data point select (binding is the one field it accepts)', () => {
+  const onPatch = vi.fn()
+  render(
+    <GoalCard
+      goal={{ ...base, id: 'atlassian-1', source: 'atlassian', external_id: 'ari:1' }}
+      onPatch={onPatch}
+      onDelete={vi.fn()}
+      datapoints={[POINT]}
+    />
+  )
+  fireEvent.change(screen.getByLabelText('Data point'), { target: { value: 'weekly-signups' } })
+  expect(onPatch).toHaveBeenCalledWith('atlassian-1', { data_point_id: 'weekly-signups' })
+  expect(screen.queryByLabelText('Status')).toBeNull()
+})
+
+test('a bound goal shows the measured value beside its progress, never writing progress', () => {
+  const onPatch = vi.fn()
+  render(
+    <GoalCard
+      goal={{ ...base, data_point_id: 'weekly-signups' }}
+      onPatch={onPatch}
+      onDelete={vi.fn()}
+      datapoints={[POINT]}
+      measure={{ dp: POINT, value: VALUE }}
+    />
+  )
+  expect(screen.getByTestId('goal-measure')).toHaveTextContent('1,234 users · Weekly signups')
+  expect(screen.getByLabelText('Data point')).toHaveValue('weekly-signups')
+  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '42')
+  expect(onPatch).not.toHaveBeenCalled()
+})
+
+test('an errored or never-fetched measure reads "no value"', () => {
+  const { rerender } = render(
+    <GoalCard
+      goal={{ ...base, data_point_id: 'weekly-signups' }}
+      measure={{ dp: POINT, value: { ...VALUE, rows: [], error: 'boom' } }}
+    />
+  )
+  expect(screen.getByTestId('goal-measure')).toHaveTextContent('no value · Weekly signups')
+  rerender(
+    <GoalCard
+      goal={{ ...base, data_point_id: 'weekly-signups' }}
+      measure={{ dp: POINT, value: { ...VALUE, rows: [], fetched_at: null } }}
+    />
+  )
+  expect(screen.getByTestId('goal-measure')).toHaveTextContent('no value')
+})

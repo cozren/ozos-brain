@@ -98,8 +98,8 @@ export function GoalsPanel({ item, onChanged }: Props) {
         />
       </div>
       <p style={HINT}>
-        Goals live on the Goals &amp; Tasks page; each goal can bind to a data point once Phase 4
-        ships.
+        Goals live on the Goals &amp; Tasks page; each goal can bind to a data point there, and the
+        board shows the measured value beside its progress.
       </p>
     </div>
   )

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../../api'
 import type { Goal, GoalPatch, GoalsPayload, NewGoalPayload } from '../../types/goals'
+import type { DataPoint, DataPointValue } from '../../types/datapoints'
 import { STATUS_ORDER, sortGoals, statusCounts } from '../../lib/goals'
 import { AddGoalForm } from './AddGoalForm'
-import { GoalCard } from './GoalCard'
+import { GoalCard, type GoalMeasure } from './GoalCard'
 import { GoalStatusChip } from './GoalStatusChip'
 
 export const GOALS_EMPTY_COPY = 'No goals yet. Add one below, or connect Atlassian Goals in Setup.'
@@ -17,16 +18,36 @@ export function GoalsBoard() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [datapoints, setDatapoints] = useState<DataPoint[]>([])
+  const [values, setValues] = useState<Record<string, DataPointValue>>({})
+
+  // Bound goals show their data point's latest value: one fetch per distinct
+  // point that exists, never a write back to progress.
+  const loadMeasures = useCallback((goals: Goal[], points: DataPoint[]) => {
+    const ids = new Set(
+      goals
+        .map((g) => g.data_point_id)
+        .filter((id): id is string => !!id && points.some((p) => p.id === id))
+    )
+    for (const id of ids) {
+      api
+        .getDataPointValue(id)
+        .then((v) => setValues((prev) => ({ ...prev, [id]: v })))
+        .catch(() => {})
+    }
+  }, [])
 
   const load = useCallback(() => {
-    api
-      .getGoals()
-      .then((d) => {
+    Promise.all([api.getGoals(), api.getDataPoints().catch(() => null)])
+      .then(([d, p]) => {
+        const points = p?.datapoints ?? []
         setData(d)
+        setDatapoints(points)
         setError(null)
+        loadMeasures(d.goals, points)
       })
       .catch(() => setError('Could not load goals'))
-  }, [])
+  }, [loadMeasures])
 
   useEffect(() => {
     load()
@@ -48,10 +69,20 @@ export function GoalsBoard() {
     }
   }
 
-  const replace = (updated: Goal) =>
+  const replace = (updated: Goal) => {
     setData((d) =>
       d ? { ...d, goals: d.goals.map((g) => (g.id === updated.id ? updated : g)) } : d
     )
+    if (updated.data_point_id && !values[updated.data_point_id]) {
+      loadMeasures([updated], datapoints)
+    }
+  }
+
+  const measureFor = (g: Goal): GoalMeasure | undefined => {
+    const dp = g.data_point_id ? datapoints.find((p) => p.id === g.data_point_id) : undefined
+    const value = g.data_point_id ? values[g.data_point_id] : undefined
+    return dp && value ? { dp, value } : undefined
+  }
 
   const patch = (id: string, change: GoalPatch) => {
     api
@@ -138,7 +169,15 @@ export function GoalsBoard() {
           style={{ boxShadow: 'none', border: '1px solid rgba(0,255,255,0.18)' }}
         >
           {goals.map((g, i) => (
-            <GoalCard key={g.id} goal={g} first={i === 0} onPatch={patch} onDelete={remove} />
+            <GoalCard
+              key={g.id}
+              goal={g}
+              first={i === 0}
+              onPatch={patch}
+              onDelete={remove}
+              datapoints={datapoints}
+              measure={measureFor(g)}
+            />
           ))}
         </div>
       )}
