@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ozos_vault import vault_dir  # noqa: E402
+from ozos_vault import load_user_config, vault_candidate, vault_dir  # noqa: E402
 
 
 def test_env_var_wins(tmp_path):
@@ -44,3 +44,35 @@ def test_tools_use_the_shared_resolver():
         text = (root / rel).read_text(encoding="utf-8")
         assert "ozos_vault" in text, rel
         assert 'os.environ.get("OZOS_VAULT")' not in text, rel
+
+
+def test_vault_candidate_reports_source(tmp_path):
+    assert vault_candidate(tmp_path, env={"OZOS_VAULT": str(tmp_path / "v")}, home=tmp_path) == (
+        "env",
+        tmp_path / "v",
+    )
+    (tmp_path / ".ozos").mkdir()
+    (tmp_path / ".ozos" / "config.json").write_text(json.dumps({"vault": str(tmp_path / "c")}))
+    assert vault_candidate(tmp_path, env={}, home=tmp_path) == ("config", tmp_path / "c")
+    # An explicit config mapping overrides reading the file.
+    assert vault_candidate(tmp_path, env={}, home=tmp_path, config={}) == (
+        "default",
+        tmp_path / "vault",
+    )
+
+
+def test_load_user_config_silent_on_bad_file(tmp_path):
+    assert load_user_config(home=tmp_path) == {}
+    (tmp_path / ".ozos").mkdir()
+    (tmp_path / ".ozos" / "config.json").write_text("{nope")
+    assert load_user_config(home=tmp_path) == {}
+    (tmp_path / ".ozos" / "config.json").write_text(json.dumps({"me": "taylor"}))
+    assert load_user_config(home=tmp_path) == {"me": "taylor"}
+
+
+def test_app_backend_uses_the_shared_lookup_order():
+    """backend/vault.py keeps only existence checks and logging on top of ozos_vault."""
+    root = Path(__file__).resolve().parents[2]
+    text = (root / "app" / "backend" / "vault.py").read_text(encoding="utf-8")
+    assert "vault_candidate" in text
+    assert 'env.get("OZOS_VAULT")' not in text
