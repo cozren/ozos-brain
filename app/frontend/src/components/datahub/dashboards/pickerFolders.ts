@@ -1,12 +1,12 @@
 // Picker organization layer: user-created sub-folders that sit *inside* the
-// fixed code categories (registry `category`, default Other). The registry stays the
-// source of truth for what dashboards exist and their category; this layer only
-// records how the user grouped them in the "+" widget picker.
+// fixed categories (a picker item's `category` = its source kind, default Other).
+// The data points stay the source of truth for what exists; this layer only
+// records how the user grouped them in the "+" tile picker.
 //
 // Persisted (in .ozos/datahub.json under `pickerFolders`) as a map of
 // category -> ordered folders, each folder holding an ordered list of dashboard
 // ids. A dashboard not named by any folder in its category is "loose".
-import type { DashboardDef } from './registry'
+import type { PickerItem } from './registry'
 import { CATEGORY_ORDER, DEFAULT_CATEGORY, groupByCategory } from './registry'
 
 export interface PickerFolder {
@@ -21,17 +21,17 @@ export type PickerFoldersConfig = Record<string, PickerFolder[]>
 export interface OrganizedFolder {
   id: string
   name: string
-  dashboards: DashboardDef[]
+  dashboards: PickerItem[]
 }
 
 export interface OrganizedCategory {
   category: string
   folders: OrganizedFolder[]
-  loose: DashboardDef[]
+  loose: PickerItem[]
 }
 
-function categoryOf(def: DashboardDef): string {
-  return def.category ?? DEFAULT_CATEGORY
+function categoryOf(item: PickerItem): string {
+  return item.category ?? DEFAULT_CATEGORY
 }
 
 /**
@@ -44,18 +44,18 @@ function categoryOf(def: DashboardDef): string {
  * Categories follow the registry's own order (groupByCategory).
  */
 export function organizePicker(
-  dashboards: DashboardDef[],
+  items: PickerItem[],
   config: PickerFoldersConfig
 ): OrganizedCategory[] {
-  const byId = new Map(dashboards.map((d) => [d.id, d]))
+  const byId = new Map(items.map((d) => [d.id, d]))
 
-  return groupByCategory(dashboards).map((group) => {
+  return groupByCategory(items).map((group) => {
     const { category } = group
     const savedFolders = config[category] ?? []
 
     const assigned = new Set<string>()
     const folders: OrganizedFolder[] = savedFolders.map((folder) => {
-      const defs: DashboardDef[] = []
+      const defs: PickerItem[] = []
       for (const id of folder.dashboardIds) {
         const def = byId.get(id)
         // Prune unknown ids and ids that belong to a different category.
@@ -67,7 +67,7 @@ export function organizePicker(
       return { id: folder.id, name: folder.name, dashboards: defs }
     })
 
-    const loose = group.dashboards.filter((d) => !assigned.has(d.id))
+    const loose = group.items.filter((d) => !assigned.has(d.id))
     return { category, folders, loose }
   })
 }

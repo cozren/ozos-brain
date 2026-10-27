@@ -8,16 +8,19 @@ import type { DataHubLayout } from '../../../types/datahub'
 // the bound dashboard id, a pick control, and the remove control.
 vi.mock('../DashboardTile', () => ({
   DashboardTile: ({
-    dashboardId,
+    refId,
+    datapoints,
     onPick,
     onRemove,
   }: {
-    dashboardId: string | null
+    refId: string | null
+    datapoints: { id: string }[]
     onPick: (id: string) => void
     onRemove: () => void
   }) => (
     <div>
-      <span>tile:{dashboardId ?? 'empty'}</span>
+      <span>tile:{refId ?? 'empty'}</span>
+      <span>points:{datapoints.length}</span>
       <button onClick={() => onPick('rev')}>pick</button>
       <button onClick={onRemove}>remove-tile</button>
     </div>
@@ -25,7 +28,7 @@ vi.mock('../DashboardTile', () => ({
 }))
 
 vi.mock('../../../api', () => ({
-  api: { getDataHubLayout: vi.fn(), saveDataHubLayout: vi.fn() },
+  api: { getDataHubLayout: vi.fn(), saveDataHubLayout: vi.fn(), getDataPoints: vi.fn() },
 }))
 
 async function importApi() {
@@ -35,8 +38,16 @@ async function importApi() {
 
 const EMPTY: DataHubLayout = { tabs: { 'media-ads': { rows: [] } } }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks()
+  const api = await importApi()
+  api.getDataPoints.mockResolvedValue({
+    datapoints: [{ id: 'rev' }, { id: 'clk' }] as never,
+    connector: { configured: false, missing: [] },
+    kinds: [],
+    displays: [],
+    refreshes: [],
+  })
 })
 
 describe('DashboardCanvas (Loadout)', () => {
@@ -51,6 +62,8 @@ describe('DashboardCanvas (Loadout)', () => {
     await userEvent.click(await screen.findByRole('button', { name: /add first tile/i }))
 
     expect(screen.getAllByText(/^tile:/)).toHaveLength(1)
+    // The tile is handed the data points the canvas loaded.
+    await waitFor(() => expect(screen.getByText('points:2')).toBeInTheDocument())
     const saved = api.saveDataHubLayout.mock.calls.at(-1)![0] as DataHubLayout
     expect(saved.tabs['media-ads'].rows).toHaveLength(1)
     expect(saved.tabs['media-ads'].rows[0].tiles).toHaveLength(1)

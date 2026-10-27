@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api'
 import type { LoadoutRow } from '../../types/loadout'
+import type { DataPoint } from '../../types/datapoints'
 import type { PickerFoldersConfig } from './dashboards/pickerFolders'
 import { LoadoutCanvas } from '../loadout/LoadoutCanvas'
 import { DashboardTile } from './DashboardTile'
@@ -19,13 +20,14 @@ interface DashboardCanvasProps {
 }
 
 // Data Hub is a Loadout canvas per tab. The full per-tab map is held so saving
-// one tab doesn't clobber the others. A tile's refId is a dashboard id;
-// DashboardTile renders its own dashboard picker when the tile is empty.
+// one tab doesn't clobber the others. A tile's refId is a data point id;
+// DashboardTile renders the data point picker when the tile is empty.
 export function DashboardCanvas({ tabId, defaultRows, onCountChange }: DashboardCanvasProps) {
   const [tabsRows, setTabsRows] = useState<Record<string, LoadoutRow[]>>({})
   const [pickerFolders, setPickerFolders] = useState<PickerFoldersConfig>({})
   const [loaded, setLoaded] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [datapoints, setDatapoints] = useState<DataPoint[]>([])
 
   // Latest tabs/folders held in refs so a save of one never clobbers the other
   // with a stale closure value (tabs and picker folders share one PUT).
@@ -34,6 +36,14 @@ export function DashboardCanvas({ tabId, defaultRows, onCountChange }: Dashboard
 
   useEffect(() => {
     let alive = true
+    api
+      .getDataPoints()
+      .then((d) => {
+        if (alive) setDatapoints(d.datapoints)
+      })
+      .catch(() => {
+        if (alive) setDatapoints([])
+      })
     api.getDataHubLayout().then((layout) => {
       if (!alive) return
       const map: Record<string, LoadoutRow[]> = {}
@@ -109,7 +119,8 @@ export function DashboardCanvas({ tabId, defaultRows, onCountChange }: Dashboard
         onChange={persist}
         renderTile={(refId, { onPick, onRemove }) => (
           <DashboardTile
-            dashboardId={refId}
+            refId={refId}
+            datapoints={datapoints}
             onPick={onPick}
             onRemove={onRemove}
             pickerFolders={pickerFolders}

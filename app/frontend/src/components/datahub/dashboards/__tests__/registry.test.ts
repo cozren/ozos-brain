@@ -1,52 +1,37 @@
 import { describe, test, expect } from 'vitest'
-import { DASHBOARDS, getDashboard, groupByCategory, type DashboardDef } from '../registry'
-
-describe('dashboard registry', () => {
-  test('ships empty: a fresh vault has no dashboards', () => {
-    expect(DASHBOARDS).toEqual([])
-  })
-
-  test('getDashboard returns undefined for an unknown id', () => {
-    expect(getDashboard('does-not-exist')).toBeUndefined()
-  })
-
-  test('getDashboard finds a registered dashboard by id', () => {
-    DASHBOARDS.push({ id: '__test__', label: 'Test', Component: () => null })
-    try {
-      expect(getDashboard('__test__')?.label).toBe('Test')
-    } finally {
-      DASHBOARDS.pop()
-    }
-  })
-})
+import { CATEGORY_ORDER, DEFAULT_CATEGORY, groupByCategory, type PickerItem } from '../registry'
 
 describe('groupByCategory', () => {
-  const A: DashboardDef = { id: 'a', label: 'A', category: 'Growth', Component: () => null }
-  const C: DashboardDef = { id: 'c', label: 'C', category: 'Other', Component: () => null }
-  const D: DashboardDef = { id: 'd', label: 'D', Component: () => null } // no category
+  const M: PickerItem = { id: 'm', label: 'M', category: 'Metabase' }
+  const C: PickerItem = { id: 'c', label: 'C', category: 'CSV' }
+  const G: PickerItem = { id: 'g', label: 'G', category: 'Growth' }
+  const D: PickerItem = { id: 'd', label: 'D' } // no category
 
-  test('puts Other first, then unknown categories in first-seen order', () => {
-    const groups = groupByCategory([A, C])
-    expect(groups.map((g) => g.category)).toEqual(['Other', 'Growth'])
+  test('source kinds come first in canonical order, then the rest first-seen', () => {
+    expect(CATEGORY_ORDER).toEqual(['Metabase', 'SQLite', 'CSV'])
+    expect(groupByCategory([G, C, M]).map((g) => g.category)).toEqual(['Metabase', 'CSV', 'Growth'])
   })
 
-  test('skips categories that have no dashboards', () => {
-    expect(groupByCategory([A]).map((g) => g.category)).toEqual(['Growth'])
+  test('skips categories that have no items', () => {
+    expect(groupByCategory([G]).map((g) => g.category)).toEqual(['Growth'])
   })
 
-  test('buckets an uncategorised dashboard under Other', () => {
+  test('buckets an uncategorised item under the default category', () => {
     const groups = groupByCategory([D])
+    expect(DEFAULT_CATEGORY).toBe('Other')
     expect(groups.map((g) => g.category)).toEqual(['Other'])
-    expect(groups[0].dashboards).toEqual([D])
+    expect(groups[0].items).toEqual([D])
   })
 
-  test('keeps every dashboard for a category together', () => {
-    const a2: DashboardDef = { id: 'a2', label: 'A2', category: 'Growth', Component: () => null }
-    const groups = groupByCategory([A, C, a2])
-    expect(groups.find((g) => g.category === 'Growth')!.dashboards).toEqual([A, a2])
+  test('keeps every item of a category together', () => {
+    const m2: PickerItem = { id: 'm2', label: 'M2', category: 'Metabase' }
+    expect(groupByCategory([M, C, m2]).find((g) => g.category === 'Metabase')!.items).toEqual([
+      M,
+      m2,
+    ])
   })
 
-  test('returns no groups for the empty default registry', () => {
-    expect(groupByCategory()).toEqual([])
+  test('no groups for no items', () => {
+    expect(groupByCategory([])).toEqual([])
   })
 })

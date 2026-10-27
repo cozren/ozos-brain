@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { DashboardDef } from '../registry'
+import type { PickerItem } from '../registry'
 import {
   organizePicker,
   createFolder,
@@ -10,7 +10,7 @@ import {
 } from '../pickerFolders'
 
 // Minimal fake registry — organizePicker must not depend on real components.
-const DASHBOARDS: DashboardDef[] = [
+const DASHBOARDS: PickerItem[] = [
   { id: 'a1', label: 'Ads One', category: 'Media Ads' },
   { id: 'a2', label: 'Ads Two', category: 'Media Ads' },
   { id: 'c1', label: 'Widget One', category: 'Widget' },
@@ -28,9 +28,9 @@ describe('organizePicker', () => {
     expect(other.loose.map((d) => d.id)).toEqual(['x1'])
   })
 
-  it('keeps CATEGORY_ORDER categories first, then the rest in first-seen order', () => {
+  it('keeps categories in first-seen order when none is a source kind', () => {
     const org = organizePicker(DASHBOARDS, {})
-    expect(org.map((c) => c.category)).toEqual(['Other', 'Media Ads', 'Widget'])
+    expect(org.map((c) => c.category)).toEqual(['Media Ads', 'Widget', 'Other'])
   })
 
   it('places assigned dashboards into their folder and leaves the rest loose', () => {

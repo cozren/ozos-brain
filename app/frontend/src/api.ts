@@ -31,6 +31,14 @@ import type {
   CreateFolderResponse,
 } from './types/knowledge'
 import type { DataHubLayout } from './types/datahub'
+import type {
+  DataPoint,
+  DataPointPatch,
+  DataPointValue,
+  DataPointsPayload,
+  NewDataPointPayload,
+  RefreshAllResult,
+} from './types/datapoints'
 import type { Goal, GoalPatch, GoalsPayload, NewGoalPayload, SyncResult } from './types/goals'
 import type {
   CyclePayload,
@@ -774,6 +782,56 @@ export const api = {
       if (!r.ok) throw new Error(`Save Data Hub layout failed: ${r.status}`)
       return r.json()
     }),
+
+  // ── Data points ─────────────────────────────────────────────────────
+  getDataPoints: (): Promise<DataPointsPayload> =>
+    fetch(`${BASE}/datapoints`).then((r) => {
+      if (!r.ok) throw new Error(`Load data points failed: ${r.status}`)
+      return r.json()
+    }),
+
+  addDataPoint: (payload: NewDataPointPayload): Promise<DataPoint> =>
+    fetch(`${BASE}/datapoints`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((r) => throwIfNotOk(r, 'Add data point'))
+      .then((r) => r.json()),
+
+  updateDataPoint: (id: string, patch: DataPointPatch): Promise<DataPoint> =>
+    fetch(`${BASE}/datapoints/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+      .then((r) => throwIfNotOk(r, 'Update data point'))
+      .then((r) => r.json()),
+
+  deleteDataPoint: (id: string): Promise<{ deleted: string }> =>
+    fetch(`${BASE}/datapoints/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .then((r) => throwIfNotOk(r, 'Delete data point'))
+      .then((r) => r.json()),
+
+  getDataPointValue: (id: string): Promise<DataPointValue> =>
+    fetch(`${BASE}/datapoints/${encodeURIComponent(id)}/value`)
+      .then((r) => throwIfNotOk(r, 'Load data point value'))
+      .then((r) => r.json()),
+
+  refreshDataPoint: (id: string): Promise<DataPointValue> =>
+    fetch(`${BASE}/datapoints/${encodeURIComponent(id)}/refresh`, { method: 'POST' })
+      .then((r) => throwIfNotOk(r, 'Refresh data point'))
+      .then((r) => r.json()),
+
+  refreshAllDataPoints: (): Promise<RefreshAllResult> =>
+    fetch(`${BASE}/datapoints/refresh`, { method: 'POST' })
+      .then((r) => throwIfNotOk(r, 'Refresh data points'))
+      .then((r) => r.json()),
+
+  testMetabase: (): Promise<{ ok: boolean; message: string }> =>
+    fetch(`${BASE}/datapoints/metabase/test`, { method: 'POST' })
+      .then((r) => throwIfNotOk(r, 'Test Metabase'))
+      .then((r) => r.json()),
 }
 
 export type { SubTask }

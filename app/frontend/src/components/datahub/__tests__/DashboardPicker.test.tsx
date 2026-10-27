@@ -1,24 +1,27 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { vi, describe, test, expect, beforeEach, afterEach } from 'vitest'
+import { vi, describe, test, expect } from 'vitest'
 import { DashboardPicker } from '../DashboardPicker'
-import { DASHBOARDS } from '../dashboards/registry'
+import type { PickerItem } from '../dashboards/registry'
 import type { PickerFoldersConfig } from '../dashboards/pickerFolders'
 
-// Drive a controlled registry so these tests don't depend on shipped dashboards.
-beforeEach(() => {
-  DASHBOARDS.length = 0
-  DASHBOARDS.push({ id: 'c1', label: 'Widget One', category: 'Widget', Component: () => null })
-  DASHBOARDS.push({ id: 'c2', label: 'Widget Two', category: 'Widget', Component: () => null })
-})
-afterEach(() => {
-  DASHBOARDS.length = 0
-})
+// The picker is driven by the items it is handed (data points mapped by the tile).
+const ITEMS: PickerItem[] = [
+  { id: 'c1', label: 'Widget One', category: 'Widget' },
+  { id: 'c2', label: 'Widget Two', category: 'Widget' },
+]
 
 function renderPicker(folders: PickerFoldersConfig = {}) {
   const onFoldersChange = vi.fn()
   const onPick = vi.fn()
-  render(<DashboardPicker folders={folders} onFoldersChange={onFoldersChange} onPick={onPick} />)
+  render(
+    <DashboardPicker
+      items={ITEMS}
+      folders={folders}
+      onFoldersChange={onFoldersChange}
+      onPick={onPick}
+    />
+  )
   return { onFoldersChange, onPick }
 }
 

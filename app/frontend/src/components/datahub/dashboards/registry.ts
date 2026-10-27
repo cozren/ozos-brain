@@ -1,52 +1,43 @@
-import type { FC } from 'react'
-
-// Dashboard registry. Data points (a later phase) register their tiles here;
-// the engine ships with none, so a fresh vault shows the Data Hub empty state.
-export interface DashboardDef {
-  id: string // stable slug
+// The tile picker's item model. Items are data points (lib/datapoints.ts maps
+// them); the category is the source kind, so the picker groups by where the
+// numbers come from. pickerFolders.ts layers user sub-folders on top.
+export interface PickerItem {
+  id: string // the data point id a tile's refId points at
   label: string // shown in the tile picker
   category?: string // optional grouping in the picker
-  Component?: FC // in-app dashboard component
-  embedUrl?: string // external iframe URL (mutually exclusive with Component)
 }
 
-export const DASHBOARDS: DashboardDef[] = []
-
-export function getDashboard(id: string): DashboardDef | undefined {
-  return DASHBOARDS.find((d) => d.id === id)
-}
-
-export interface DashboardGroup {
+export interface PickerGroup {
   category: string
-  dashboards: DashboardDef[]
+  items: PickerItem[]
 }
 
-// Categories listed here come first in the "+" widget picker, in this order; any
-// other category (including a dashboard with no `category`, which falls back to
-// DEFAULT_CATEGORY) is appended after these, in first-seen order.
-export const CATEGORY_ORDER = ['Other']
+// Source kinds come first in this order; any other category (including an
+// item with no `category`, which falls back to DEFAULT_CATEGORY) follows in
+// first-seen order.
+export const CATEGORY_ORDER = ['Metabase', 'SQLite', 'CSV']
 export const DEFAULT_CATEGORY = 'Other'
 
-/** Group dashboards by category for the picker menu. */
-export function groupByCategory(dashboards: DashboardDef[] = DASHBOARDS): DashboardGroup[] {
-  const byCategory = new Map<string, DashboardDef[]>()
-  for (const def of dashboards) {
-    const category = def.category ?? DEFAULT_CATEGORY
+/** Group items by category for the picker menu. */
+export function groupByCategory(items: PickerItem[]): PickerGroup[] {
+  const byCategory = new Map<string, PickerItem[]>()
+  for (const item of items) {
+    const category = item.category ?? DEFAULT_CATEGORY
     const bucket = byCategory.get(category)
-    if (bucket) bucket.push(def)
-    else byCategory.set(category, [def])
+    if (bucket) bucket.push(item)
+    else byCategory.set(category, [item])
   }
 
-  const groups: DashboardGroup[] = []
+  const groups: PickerGroup[] = []
   for (const category of CATEGORY_ORDER) {
-    const dashboards = byCategory.get(category)
-    if (dashboards) {
-      groups.push({ category, dashboards })
+    const bucket = byCategory.get(category)
+    if (bucket) {
+      groups.push({ category, items: bucket })
       byCategory.delete(category)
     }
   }
-  for (const [category, dashboards] of byCategory) {
-    groups.push({ category, dashboards })
+  for (const [category, bucket] of byCategory) {
+    groups.push({ category, items: bucket })
   }
   return groups
 }

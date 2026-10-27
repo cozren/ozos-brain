@@ -1,35 +1,39 @@
 import { X } from 'lucide-react'
-import { getDashboard } from './dashboards/registry'
+import type { DataPoint } from '../../types/datapoints'
 import type { PickerFoldersConfig } from './dashboards/pickerFolders'
+import { toPickerItems } from '../../lib/datapoints'
 import { DashboardPicker } from './DashboardPicker'
+import { DataPointTile } from './DataPointTile'
 import '../../styles/datahub.css'
 
 interface DashboardTileProps {
-  dashboardId: string | null
+  refId: string | null
+  datapoints: DataPoint[]
   onPick: (id: string) => void
   onRemove: () => void
   pickerFolders?: PickerFoldersConfig
   onFoldersChange?: (next: PickerFoldersConfig) => void
 }
 
+// A Data Hub tile: empty → the data point picker; a known refId → that data
+// point's value; an unknown refId → "Data point removed" with a remove action.
 export function DashboardTile({
-  dashboardId,
+  refId,
+  datapoints,
   onPick,
   onRemove,
   pickerFolders = {},
   onFoldersChange,
 }: DashboardTileProps) {
-  const def = dashboardId ? getDashboard(dashboardId) : undefined
+  const dp = refId ? datapoints.find((d) => d.id === refId) : undefined
 
-  const title = def?.label ?? (dashboardId ? 'Unknown dashboard' : 'Choose a dashboard')
+  // A data point tile shows its own name in the body, so the chrome stays blank.
+  const title = dp ? '' : refId ? 'Data point removed' : 'Choose a data point'
 
   return (
     <div className="datahub-tile">
       <div className="datahub-tile__head">
-        {/* Component tiles render their own bold title inside the body, so the
-            chrome title is suppressed to avoid a duplicate. Embeds / unknown /
-            empty tiles have no inner title, so they keep the chrome label. */}
-        <span>{def?.Component ? '' : title}</span>
+        <span>{title}</span>
         <button
           className="datahub-tile__btn"
           onClick={onRemove}
@@ -40,18 +44,22 @@ export function DashboardTile({
         </button>
       </div>
       <div className="datahub-tile__body">
-        {dashboardId === null ? (
+        {refId === null ? (
           <DashboardPicker
+            items={toPickerItems(datapoints)}
             folders={pickerFolders}
             onFoldersChange={onFoldersChange ?? (() => {})}
             onPick={onPick}
           />
-        ) : def?.Component ? (
-          <def.Component />
-        ) : def?.embedUrl ? (
-          <iframe src={def.embedUrl} title={def.label} />
+        ) : dp ? (
+          <DataPointTile dp={dp} />
         ) : (
-          <div className="datahub-tile__placeholder">Unknown dashboard: {dashboardId}</div>
+          <div className="datahub-tile__placeholder datahub-tile__placeholder--column">
+            <span>Data point removed</span>
+            <button className="datahub-tile__picker-item" onClick={onRemove}>
+              Remove this tile
+            </button>
+          </div>
         )}
       </div>
     </div>

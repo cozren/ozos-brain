@@ -11,7 +11,7 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronRight, ChevronDown, FolderPlus, Trash2, GripVertical, X } from 'lucide-react'
-import { DASHBOARDS, type DashboardDef } from './dashboards/registry'
+import type { PickerItem } from './dashboards/registry'
 import {
   organizePicker,
   createFolder,
@@ -23,6 +23,7 @@ import {
 import '../../styles/dashboard-picker.css'
 
 interface DashboardPickerProps {
+  items: PickerItem[]
   folders: PickerFoldersConfig
   onFoldersChange: (next: PickerFoldersConfig) => void
   onPick: (id: string) => void
@@ -58,8 +59,8 @@ function newFolderId(): string {
   return `fld-${Date.now().toString(36)}`
 }
 
-export function DashboardPicker({ folders, onFoldersChange, onPick }: DashboardPickerProps) {
-  const organized = useMemo(() => organizePicker(DASHBOARDS, folders), [folders])
+export function DashboardPicker({ items, folders, onFoldersChange, onPick }: DashboardPickerProps) {
+  const organized = useMemo(() => organizePicker(items, folders), [items, folders])
 
   // Everything is collapsed on open — expand state is intentionally not persisted.
   const [openCats, setOpenCats] = useState<Set<string>>(new Set())
@@ -176,7 +177,7 @@ interface FolderSectionProps {
   category: string
   folderId: string
   name: string
-  dashboards: DashboardDef[]
+  dashboards: PickerItem[]
   open: boolean
   onToggle: () => void
   onRename: (name: string) => void
@@ -251,7 +252,7 @@ function LooseZone({
   onPick,
 }: {
   category: string
-  dashboards: DashboardDef[]
+  dashboards: PickerItem[]
   onPick: (id: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: containerId({ category, folderId: null }) })
@@ -272,7 +273,7 @@ function LooseZone({
 
 // ── A single draggable / clickable dashboard row ──────────────────────────────
 
-function DashboardRow({ def, onPick }: { def: DashboardDef; onPick: (id: string) => void }) {
+function DashboardRow({ def, onPick }: { def: PickerItem; onPick: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: def.id,
   })
