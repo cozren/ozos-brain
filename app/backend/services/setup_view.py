@@ -3,7 +3,8 @@
 Derived at read time, never stored:
   profile          done when ~/.ozos/config.json has a name and a person id
   MCP items        done when `claude mcp list` shows a matching connected server
-  needs_attention  a done item whose vital failed or is stale
+  needs_attention  a done item whose vital failed or is stale; the goals item's
+                   "vital" is the outcome of the last Atlassian sync
 
 Discovery helpers are module attributes so tests can replace them.
 """
@@ -11,7 +12,7 @@ Discovery helpers are module attributes so tests can replace them.
 from __future__ import annotations
 
 from ..vault import load_user_config as _load_user_config
-from . import setup_state
+from . import goals, setup_state
 from .control_tower import discover_mcps as _discover_mcps
 from .control_tower import load_vitals as _load_vitals
 from .setup_registry import GROUPS, ITEMS
@@ -19,6 +20,7 @@ from .setup_registry import GROUPS, ITEMS
 load_user_config = _load_user_config
 discover_mcps = _discover_mcps
 load_vitals = _load_vitals
+load_goals_sync = goals.sync_health  # None until a goals sync has run
 
 _CONNECTED = ("active", "pending")
 
@@ -80,10 +82,16 @@ def _item_view(it: dict, stored: dict, ctx: dict) -> dict:
 
 def build_view() -> dict:
     state = setup_state.load_state()
+    vitals: dict[str, dict] = {}
+    goals_sync = _safe(load_goals_sync, None)
+    if goals_sync:
+        vitals[goals_sync["id"]] = goals_sync
+    # A real vital of the same id (from vitals.json) wins over the synthetic one.
+    vitals.update({v["id"]: v for v in (_safe(load_vitals, []) or []) if "id" in v})
     ctx = {
         "config": _safe(load_user_config, {}) or {},
         "mcps": _mcp_names(_safe(discover_mcps, {}) or {}),
-        "vitals": {v["id"]: v for v in (_safe(load_vitals, []) or []) if "id" in v},
+        "vitals": vitals,
     }
     views = [_item_view(it, state["items"][it["id"]], ctx) for it in ITEMS]
     by_group: dict[str, list[dict]] = {g: [] for g, _ in GROUPS}

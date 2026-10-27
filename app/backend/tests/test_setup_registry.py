@@ -6,7 +6,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from backend.services.setup_registry import GROUPS, ITEM_IDS, ITEMS, STATUSES, item
+from backend.services.setup_registry import (
+    GROUPS,
+    ITEM_IDS,
+    ITEMS,
+    STATUSES,
+    env_whitelist,
+    item,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -112,3 +119,25 @@ def test_setup_guide_describes_the_setup_page():
     assert "## A. JSON reference" in guide
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     assert "Phase 2" in readme and "Setup page" in readme
+
+
+def test_define_goals_is_a_real_item():
+    it = item("define-goals")
+    assert it["kind"] == "goals" and it["vital"] == "goals-sync"
+    assert it["env"] == [
+        "ATLASSIAN_EMAIL",
+        "ATLASSIAN_TOKEN",
+        "ATLASSIAN_SUBDOMAIN",
+        "ATLASSIAN_CLOUD_ID",
+    ]
+    assert env_whitelist() == [
+        "ATLASSIAN_EMAIL",
+        "ATLASSIAN_TOKEN",
+        "ATLASSIAN_SUBDOMAIN",
+        "ATLASSIAN_CLOUD_ID",
+    ]
+
+
+def test_vault_template_has_empty_goals_file():
+    tpl = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "goals.json").read_text())
+    assert tpl == {"goals": [], "sync": None}

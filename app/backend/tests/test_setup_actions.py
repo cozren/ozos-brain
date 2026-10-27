@@ -222,8 +222,13 @@ def test_env_write_whitelist_and_no_echo(vault):
         "ATLASSIAN_EMAIL": True,
         "ATLASSIAN_TOKEN": True,
         "ATLASSIAN_SUBDOMAIN": True,
+        "ATLASSIAN_CLOUD_ID": False,
     }
     assert load_state()["items"]["confluence"]["status"] == "done"
+    # Goals needs the cloud id too, so the Confluence trio alone leaves it open.
+    assert load_state()["items"]["define-goals"]["status"] == "not_started"
+    write_env({"ATLASSIAN_CLOUD_ID": "cid"})
+    assert load_state()["items"]["define-goals"]["status"] == "done"
     with pytest.raises(ValueError):
         write_env({"ANTHROPIC_API_KEY": "x"})
     with pytest.raises(ValueError):
@@ -247,6 +252,7 @@ def test_env_status_without_file(vault):
         "ATLASSIAN_EMAIL": False,
         "ATLASSIAN_TOKEN": False,
         "ATLASSIAN_SUBDOMAIN": False,
+        "ATLASSIAN_CLOUD_ID": False,
     }
 
 

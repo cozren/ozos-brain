@@ -30,6 +30,7 @@ OZOS_REMOTE_MCPS = OZOS_CONFIG_DIR / "remote-mcps.json"
 OZOS_VITALS = OZOS_CONFIG_DIR / "vitals.json"
 OZOS_RUNS_DIR = OZOS_CONFIG_DIR / "runs"  # per-vital run-logs written by the tools
 OZOS_SETUP_FILE = OZOS_CONFIG_DIR / "setup.json"  # the setup journal (Setup page, /ozos-setup)
+OZOS_GOALS_FILE = OZOS_CONFIG_DIR / "goals.json"  # goals by hand or pulled from a connector
 
 # Project settings & MCP config
 OZOS_PROJECT_SETTINGS = _ROOT / ".claude" / "settings.json"

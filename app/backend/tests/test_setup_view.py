@@ -13,6 +13,7 @@ def view_env(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_view, "load_user_config", lambda: {})
     monkeypatch.setattr(setup_view, "discover_mcps", lambda: {"remote": [], "local": []})
     monkeypatch.setattr(setup_view, "load_vitals", lambda: [])
+    monkeypatch.setattr(setup_view, "load_goals_sync", lambda: None)
 
 
 def _items(view: dict) -> dict:
@@ -94,3 +95,19 @@ def test_view_survives_broken_discovery(view_env, monkeypatch):
     monkeypatch.setattr(setup_view, "discover_mcps", boom)
     monkeypatch.setattr(setup_view, "load_vitals", boom)
     assert build_view()["summary"]["total"] == 17
+
+
+def test_failed_goals_sync_turns_done_item_into_needs_attention(view_env, monkeypatch):
+    set_status("define-goals", "done")
+    monkeypatch.setattr(
+        setup_view,
+        "load_goals_sync",
+        lambda: {"id": "goals-sync", "status": "fail", "message": "boom"},
+    )
+    item = _items(build_view())["define-goals"]
+    assert item["status"] == "needs_attention"
+    assert item["derived"] == {"vital": {"status": "fail"}}
+    monkeypatch.setattr(
+        setup_view, "load_goals_sync", lambda: {"id": "goals-sync", "status": "ok", "message": ""}
+    )
+    assert _items(build_view())["define-goals"]["status"] == "done"

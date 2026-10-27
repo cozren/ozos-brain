@@ -13,6 +13,7 @@ def client_env(tmp_path, monkeypatch):
     monkeypatch.setattr(setup_view, "load_user_config", lambda: {})
     monkeypatch.setattr(setup_view, "discover_mcps", lambda: {"remote": [], "local": []})
     monkeypatch.setattr(setup_view, "load_vitals", lambda: [])
+    monkeypatch.setattr(setup_view, "load_goals_sync", lambda: None)
     return tmp_path
 
 
@@ -124,6 +125,7 @@ def test_env_endpoints_never_echo_values(action_env):
         "ATLASSIAN_EMAIL": True,
         "ATLASSIAN_TOKEN": False,
         "ATLASSIAN_SUBDOMAIN": False,
+        "ATLASSIAN_CLOUD_ID": False,
     }
     assert "me@x.y" not in g.text
     bad = client.put("/api/setup/env", json={"vars": {"ANTHROPIC_API_KEY": "x"}})
