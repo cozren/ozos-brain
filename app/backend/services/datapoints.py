@@ -268,3 +268,33 @@ def refresh_health() -> dict | None:
         if error:
             return {"id": VITAL_ID, "status": "fail", "message": f"{point['name']}: {error}"}
     return {"id": VITAL_ID, "status": "ok", "message": ""}
+
+
+# ── refresh ─────────────────────────────────────────────────────────────
+
+
+def refresh_datapoint(dp_id: str, now: datetime | None = None) -> dict:
+    """Fetch one point into the cache. A failed fetch is cached as `error`, never
+    raised: the tile and the Setup item show it. Unknown id → KeyError."""
+    from . import datapoint_sources  # late import: that module imports this one
+
+    point = get_datapoint(dp_id)
+    try:
+        columns, rows = datapoint_sources.fetch(point["source"])
+    except Exception as exc:  # noqa: BLE001 — every source failure is a cached error
+        write_error(dp_id, str(exc) or exc.__class__.__name__, now)
+    else:
+        write_rows(dp_id, columns, rows, now)
+    return read_value(dp_id)
+
+
+def refresh_all(daily_only: bool = False, now: datetime | None = None) -> dict:
+    refreshed, failed = 0, []
+    for point in load_datapoints():
+        if daily_only and point["refresh"] != "daily":
+            continue
+        if refresh_datapoint(point["id"], now)["error"]:
+            failed.append(point["id"])
+        else:
+            refreshed += 1
+    return {"refreshed": refreshed, "failed": failed}

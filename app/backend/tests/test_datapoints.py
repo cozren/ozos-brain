@@ -145,3 +145,35 @@ def test_cache_value_and_health(dp_env):
     assert refresh_health() == {"id": "datapoints-refresh", "status": "fail", "message": "A: boom"}
     cache_path("a").write_text("{nope")
     assert read_value("a")["fetched_at"] is None
+
+
+def test_refresh_writes_rows_or_error_and_refresh_all_filters_daily(dp_env, monkeypatch):
+    from backend.services import datapoint_sources
+    from backend.services.datapoints import refresh_all, refresh_datapoint
+
+    add_datapoint(
+        {
+            "name": "A",
+            "source": {"kind": "csv", "path": "a.csv", "column": None},
+            "refresh": "daily",
+        }
+    )
+    add_datapoint({"name": "B", "source": {"kind": "csv", "path": "b.csv", "column": None}})
+    calls = []
+
+    def fake_fetch(source):
+        calls.append(source["path"])
+        if source["path"] == "b.csv":
+            raise FileNotFoundError("b.csv not found in the vault")
+        return ["n"], [[7]]
+
+    monkeypatch.setattr(datapoint_sources, "fetch", fake_fetch)
+    assert refresh_datapoint("a")["rows"] == [[7]]
+    v = refresh_datapoint("b")
+    assert v["error"] == "b.csv not found in the vault" and v["fetched_at"]
+    with pytest.raises(KeyError):
+        refresh_datapoint("nope")
+    calls.clear()
+    assert refresh_all(daily_only=True) == {"refreshed": 1, "failed": []}
+    assert calls == ["a.csv"]
+    assert refresh_all() == {"refreshed": 1, "failed": ["b"]}
