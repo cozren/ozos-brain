@@ -13,12 +13,13 @@ export type SetupKind =
   | 'people'
   | 'cycle'
   | 'goals'
-  | 'placeholder'
+  | 'data'
 
 export interface SetupDerived {
   profile?: { name: string; me: string; voice_text: string }
   mcp?: { connected: boolean; names: string[] }
   vital?: { status: string }
+  datapoints?: { count: number }
 }
 
 export interface SetupRow {

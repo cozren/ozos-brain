@@ -55,6 +55,16 @@ export const HINT: CSSProperties = {
   margin: 0,
 }
 
+// Section caption inside a multi-block panel (Goals, Data points).
+export const CAPTION: CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: 10,
+  letterSpacing: 2,
+  textTransform: 'uppercase',
+  color: 'var(--neon-cyan)',
+  margin: 0,
+}
+
 export const OK: CSSProperties = { ...HINT, color: '#22C55E', fontFamily: 'var(--font-mono)' }
 export const ERR: CSSProperties = { ...HINT, color: '#EF4444', fontFamily: 'var(--font-mono)' }
 

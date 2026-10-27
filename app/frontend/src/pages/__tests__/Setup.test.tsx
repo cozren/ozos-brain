@@ -14,6 +14,11 @@ vi.mock('../../api', () => ({
     getGoals: vi.fn().mockResolvedValue(null),
     syncGoals: vi.fn(),
     addGoal: vi.fn(),
+    getDataPoints: vi.fn().mockResolvedValue(null),
+    getDataPointValue: vi.fn(),
+    addDataPoint: vi.fn(),
+    deleteDataPoint: vi.fn(),
+    testMetabase: vi.fn(),
   },
   ApiError: class ApiError extends Error {},
 }))

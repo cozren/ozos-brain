@@ -8,8 +8,8 @@ import { FolderForm } from './FolderForm'
 import { RoutingForm } from './RoutingForm'
 import { McpPanel } from './McpPanel'
 import { GmailPanel } from './GmailPanel'
-import { PlaceholderPanel } from './PlaceholderPanel'
 import { GoalsPanel } from './GoalsPanel'
+import { DataPanel } from './DataPanel'
 import { CODE, HINT } from './formStyles'
 
 interface Props {
@@ -203,8 +203,8 @@ export function SetupItemBody({ item, onChanged, cadence }: Props) {
       )
     case 'goals':
       return <GoalsPanel item={item} onChanged={onChanged} />
-    case 'placeholder':
-      return <PlaceholderPanel itemId={item.id} />
+    case 'data':
+      return <DataPanel item={item} onChanged={onChanged} />
     default:
       return null
   }

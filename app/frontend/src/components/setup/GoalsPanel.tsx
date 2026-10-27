@@ -4,20 +4,11 @@ import type { SetupItem } from '../../types/setup'
 import type { GoalsPayload } from '../../types/goals'
 import { AddGoalForm } from '../goals/AddGoalForm'
 import { EnvForm } from './EnvForm'
-import { ERR, HINT, OK, PRIMARY } from './formStyles'
+import { CAPTION, ERR, HINT, OK, PRIMARY } from './formStyles'
 
 interface Props {
   item: SetupItem
   onChanged: () => void
-}
-
-const CAPTION: React.CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 10,
-  letterSpacing: 2,
-  textTransform: 'uppercase',
-  color: 'var(--neon-cyan)',
-  margin: 0,
 }
 
 // The Goals setup item: connect Atlassian Goals (four .env lines, then a sync),

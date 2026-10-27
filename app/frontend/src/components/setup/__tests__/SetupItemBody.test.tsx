@@ -14,6 +14,13 @@ vi.mock('../../../api', () => ({
       connector: { configured: false, missing: [] },
       statuses: [],
     }),
+    getDataPoints: vi.fn().mockResolvedValue({
+      datapoints: [],
+      connector: { configured: false, missing: ['METABASE_URL'] },
+      kinds: [],
+      displays: [],
+      refreshes: [],
+    }),
   },
   ApiError: class ApiError extends Error {},
 }))
@@ -74,4 +81,14 @@ test('the goals kind renders the Goals panel with its sync button', async () => 
     />
   )
   expect(await screen.findByRole('button', { name: 'Sync now' })).toBeInTheDocument()
+})
+
+test('the data kind renders the Data points panel with its connection test', async () => {
+  render(
+    <SetupItemBody
+      item={{ ...item, id: 'first-data-point', kind: 'data', env: ['METABASE_URL'] }}
+      onChanged={() => {}}
+    />
+  )
+  expect(await screen.findByRole('button', { name: 'Test connection' })).toBeInTheDocument()
 })
