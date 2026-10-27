@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError } from '../../api'
-import type { GoalsPayload } from '../../types/goals'
+import type { Goal, GoalPatch, GoalsPayload, NewGoalPayload } from '../../types/goals'
 import { STATUS_ORDER, sortGoals, statusCounts } from '../../lib/goals'
+import { AddGoalForm } from './AddGoalForm'
 import { GoalCard } from './GoalCard'
 import { GoalStatusChip } from './GoalStatusChip'
 
@@ -45,6 +46,41 @@ export function GoalsBoard() {
     } finally {
       setBusy(false)
     }
+  }
+
+  const replace = (updated: Goal) =>
+    setData((d) =>
+      d ? { ...d, goals: d.goals.map((g) => (g.id === updated.id ? updated : g)) } : d
+    )
+
+  const patch = (id: string, change: GoalPatch) => {
+    api
+      .updateGoal(id, change)
+      .then(replace)
+      .catch((e) =>
+        setMessage({
+          ok: false,
+          text: e instanceof ApiError && e.detail ? e.detail : 'Could not update goal.',
+        })
+      )
+  }
+
+  const remove = (id: string) => {
+    api
+      .deleteGoal(id)
+      .then(() => setData((d) => (d ? { ...d, goals: d.goals.filter((g) => g.id !== id) } : d)))
+      .catch((e) =>
+        setMessage({
+          ok: false,
+          text: e instanceof ApiError && e.detail ? e.detail : 'Could not delete goal.',
+        })
+      )
+  }
+
+  const add = async (payload: NewGoalPayload) => {
+    const created = await api.addGoal(payload)
+    load()
+    return created
   }
 
   if (error) return <p style={{ ...MONO, color: '#EF4444' }}>{error}</p>
@@ -102,10 +138,16 @@ export function GoalsBoard() {
           style={{ boxShadow: 'none', border: '1px solid rgba(0,255,255,0.18)' }}
         >
           {goals.map((g, i) => (
-            <GoalCard key={g.id} goal={g} first={i === 0} />
+            <GoalCard key={g.id} goal={g} first={i === 0} onPatch={patch} onDelete={remove} />
           ))}
         </div>
       )}
+      <div className="card" style={{ boxShadow: 'none', border: '1px solid rgba(0,255,255,0.12)' }}>
+        <div className="section-label" style={{ marginBottom: 10 }}>
+          Add a goal
+        </div>
+        <AddGoalForm onSubmit={add} />
+      </div>
     </section>
   )
 }

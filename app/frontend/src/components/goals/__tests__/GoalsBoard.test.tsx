@@ -1,13 +1,19 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import { vi, test, expect, beforeEach } from 'vitest'
 import type { Goal, GoalsPayload } from '../../../types/goals'
 
 const getGoals = vi.fn()
 const syncGoals = vi.fn()
+const addGoal = vi.fn()
+const updateGoal = vi.fn()
+const deleteGoal = vi.fn()
 vi.mock('../../../api', () => ({
   api: {
     getGoals: (...a: unknown[]) => getGoals(...a),
     syncGoals: (...a: unknown[]) => syncGoals(...a),
+    addGoal: (...a: unknown[]) => addGoal(...a),
+    updateGoal: (...a: unknown[]) => updateGoal(...a),
+    deleteGoal: (...a: unknown[]) => deleteGoal(...a),
   },
   ApiError: class ApiError extends Error {
     status: number
@@ -47,6 +53,9 @@ const empty: GoalsPayload = {
 beforeEach(() => {
   getGoals.mockReset()
   syncGoals.mockReset()
+  addGoal.mockReset()
+  updateGoal.mockReset()
+  deleteGoal.mockReset()
 })
 
 test('empty state copy, and no sync button when the connector is not configured', async () => {
@@ -95,4 +104,37 @@ test('a failed sync shows the backend detail', async () => {
   render(<GoalsBoard />)
   fireEvent.click(await screen.findByRole('button', { name: 'Sync Atlassian' }))
   await waitFor(() => expect(screen.getByText('Error: Authentication failed')).toBeInTheDocument())
+})
+
+test('adding a goal posts it and reloads the list', async () => {
+  getGoals.mockResolvedValue(empty)
+  addGoal.mockResolvedValue(goal('new-one', 'pending', 'New one'))
+  render(<GoalsBoard />)
+  fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'New one' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Add goal' }))
+  await waitFor(() =>
+    expect(addGoal).toHaveBeenCalledWith(expect.objectContaining({ title: 'New one' }))
+  )
+  await waitFor(() => expect(getGoals).toHaveBeenCalledTimes(2))
+})
+
+test('changing a status patches the goal and keeps the response', async () => {
+  const g = goal('a', 'on_track', 'Alpha')
+  getGoals.mockResolvedValue({ ...empty, goals: [g] })
+  updateGoal.mockResolvedValue({ ...g, status: 'at_risk' })
+  render(<GoalsBoard />)
+  const card = (await screen.findByText('Alpha')).closest('[data-goal]') as HTMLElement
+  fireEvent.change(within(card).getByLabelText('Status'), { target: { value: 'at_risk' } })
+  await waitFor(() => expect(updateGoal).toHaveBeenCalledWith('a', { status: 'at_risk' }))
+  await waitFor(() => expect(screen.getByTestId('goal-count-at_risk')).toHaveTextContent('1'))
+})
+
+test('deleting a goal removes it from the list', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  getGoals.mockResolvedValue({ ...empty, goals: [goal('a', 'on_track', 'Alpha')] })
+  deleteGoal.mockResolvedValue({ deleted: 'a' })
+  render(<GoalsBoard />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Delete Alpha' }))
+  await waitFor(() => expect(deleteGoal).toHaveBeenCalledWith('a'))
+  await waitFor(() => expect(screen.queryByText('Alpha')).toBeNull())
 })
