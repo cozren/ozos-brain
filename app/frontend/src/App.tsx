@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { Home } from './pages/Home'
+import { Setup } from './pages/Setup'
 import { PeopleHub } from './pages/PeopleHub'
 import { ControlTower } from './pages/ControlTower'
 import { SystemHealth } from './pages/SystemHealth'
@@ -48,6 +49,7 @@ export default function App() {
       />
       <main style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
         {page === 'home' && <Home />}
+        {page === 'setup' && <Setup />}
         {page === 'people-hub' && <PeopleHub />}
         {page === 'control-tower' && <ControlTower />}
         {page === 'system-health' && <SystemHealth />}

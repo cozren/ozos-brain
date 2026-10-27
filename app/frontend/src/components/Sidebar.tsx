@@ -1,4 +1,5 @@
 import {
+  ListChecks,
   TowerControl,
   Stethoscope,
   BookOpen,
@@ -14,6 +15,7 @@ import { BrainLogo } from './BrainLogo'
 
 export type Page =
   | 'home'
+  | 'setup'
   | 'control-tower'
   | 'goals-tasks'
   | 'knowledge-hub'
@@ -33,6 +35,7 @@ interface NavItem {
 // 'home' is intentionally not listed here — the brain logo at the top acts as
 // the Home button (click the icon or "OZOS Brain" text).
 const NAV_ITEMS: NavItem[] = [
+  { page: 'setup', icon: ListChecks, label: 'Setup', enabled: true },
   { page: 'control-tower', icon: TowerControl, label: 'Control Tower', enabled: true },
   { page: 'goals-tasks', icon: Target, label: 'Goals & Tasks', enabled: true },
   { page: 'knowledge-hub', icon: BookOpen, label: 'Knowledge Hub', enabled: true },

@@ -68,3 +68,15 @@ test('renders the Insights Hub nav item (renamed from Reporting) and navigates t
   fireEvent.click(screen.getByText('Insights Hub'))
   expect(onNavigate).toHaveBeenCalledWith('reporting')
 })
+
+test('renders a Setup nav item first (right under the logo) and navigates to setup', () => {
+  const onNavigate = vi.fn()
+  renderSidebar({ onNavigate })
+  const setup = screen.getByText('Setup')
+  const controlTower = screen.getByText('Control Tower')
+  expect(
+    setup.compareDocumentPosition(controlTower) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy()
+  fireEvent.click(setup)
+  expect(onNavigate).toHaveBeenCalledWith('setup')
+})

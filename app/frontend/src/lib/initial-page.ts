@@ -2,6 +2,7 @@ import type { Page } from '../components/Sidebar'
 
 const PAGES: Page[] = [
   'home',
+  'setup',
   'control-tower',
   'goals-tasks',
   'knowledge-hub',

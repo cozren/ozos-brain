@@ -1,0 +1,93 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import { vi, test, expect, beforeEach } from 'vitest'
+import type { SetupView } from '../../types/setup'
+
+const getSetup = vi.fn()
+vi.mock('../../api', () => ({
+  api: {
+    getSetup: (...a: unknown[]) => getSetup(...a),
+    setSetupStatus: vi.fn(),
+    dismissSetup: vi.fn(),
+  },
+}))
+
+import { Setup } from '../Setup'
+
+const view: SetupView = {
+  groups: [
+    {
+      id: 'you',
+      label: 'You',
+      items: [
+        {
+          id: 'profile',
+          group: 'you',
+          title: 'Your profile',
+          why: 'Your name drives the greeting.',
+          writes: '~/.ozos/config.json',
+          kind: 'profile',
+          setup_doc: null,
+          vital: null,
+          env: [],
+          mcp_match: null,
+          default_folder: null,
+          status: 'done',
+          updated_at: null,
+          notes: '',
+          rows: [],
+          derived: { profile: { name: 'Taylor', me: 'taylor', voice_text: '' } },
+        },
+      ],
+    },
+    {
+      id: 'meeting-notes',
+      label: 'Meeting notes',
+      items: [
+        {
+          id: 'granola',
+          group: 'meeting-notes',
+          title: 'Granola',
+          why: 'Granola meetings flow into the notes pipeline.',
+          writes: '(nothing)',
+          kind: 'manual',
+          setup_doc: 'docs/connectors/granola.md',
+          vital: 'meeting-notes',
+          env: [],
+          mcp_match: null,
+          default_folder: null,
+          status: 'not_started',
+          updated_at: null,
+          notes: '',
+          rows: [],
+          derived: null,
+        },
+      ],
+    },
+  ],
+  summary: { done: 1, total: 2, open: 1, badge_dismissed: false },
+  cadence: null,
+}
+
+beforeEach(() => {
+  getSetup.mockReset()
+})
+
+test('renders the page title, groups in order, item titles and status chips', async () => {
+  getSetup.mockResolvedValue(view)
+  render(<Setup />)
+  expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByText('Your profile')).toBeInTheDocument())
+  const you = screen.getByText('You')
+  const notes = screen.getByText('Meeting notes')
+  expect(you.compareDocumentPosition(notes) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(screen.getByText('Granola')).toBeInTheDocument()
+  expect(screen.getByText('Done')).toHaveAttribute('data-status', 'done')
+  expect(screen.getByText('Not started')).toHaveAttribute('data-status', 'not_started')
+  expect(screen.getByText('1 of 2 done')).toBeInTheDocument()
+})
+
+test('shows an error line when the backend is unreachable', async () => {
+  getSetup.mockRejectedValue(new Error('boom'))
+  render(<Setup />)
+  await waitFor(() => expect(screen.getByText('Could not load setup')).toBeInTheDocument())
+})

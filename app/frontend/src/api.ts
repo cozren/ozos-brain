@@ -31,6 +31,7 @@ import type {
   CreateFolderResponse,
 } from './types/knowledge'
 import type { DataHubLayout } from './types/datahub'
+import type { SetupItem, SetupStatus, SetupView } from './types/setup'
 
 export interface ChatStreamEvent {
   type: 'text' | 'status' | 'tool_start' | 'tool_done' | 'error' | 'done'
@@ -587,6 +588,29 @@ export const api = {
   getMe: (): Promise<{ name: string; me: string }> =>
     fetch(`${BASE}/me`).then((r) => {
       if (!r.ok) throw new Error(`Load user failed: ${r.status}`)
+      return r.json()
+    }),
+
+  // ── Setup journal ───────────────────────────────────────────────────
+  getSetup: (): Promise<SetupView> =>
+    fetch(`${BASE}/setup`).then((r) => {
+      if (!r.ok) throw new Error(`Load setup failed: ${r.status}`)
+      return r.json()
+    }),
+
+  setSetupStatus: (id: string, status: SetupStatus, notes?: string): Promise<SetupItem> =>
+    fetch(`${BASE}/setup/items/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(notes == null ? { status } : { status, notes }),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Update setup item failed: ${r.status}`)
+      return r.json()
+    }),
+
+  dismissSetup: (): Promise<{ badge_dismissed: boolean }> =>
+    fetch(`${BASE}/setup/dismiss`, { method: 'POST' }).then((r) => {
+      if (!r.ok) throw new Error(`Dismiss setup badge failed: ${r.status}`)
       return r.json()
     }),
 
