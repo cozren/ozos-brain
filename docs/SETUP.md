@@ -212,6 +212,7 @@ Either choice marks the item done; you can reopen it later.
 | Do | How |
 |---|---|
 | Start the app | `bash app/run.sh` (or `/ozos-brain` in Claude Code) |
+| Work the next setup item | `/ozos-setup` in a Claude Code session, or the Setup page |
 | Sync notes from both sources | `/sync-notes` in a Claude Code session |
 | Save a session summary | `/save-session` (writes to the vault's `docs/learnings.md`) |
 | Commit engine changes | `/git`; the pre-commit gate runs tests and the scrub check |
