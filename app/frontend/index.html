@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OZOS Brain</title>
+    <!-- Some deps (react-draggable, via react-grid-layout) read process.env.* at
+         runtime. The browser has no `process`; define a stub so drag/resize
+         don't throw "process is not defined". Must run before module scripts. -->
+    <script>
+      window.process = window.process || { env: {} }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-dark: #0d0d0d;
+  --card-bg: #0f172a;
+  --neon-cyan: #00ffff;
+  --neon-magenta: #ff00ff;
+  --neon-blue: #0080ff;
+  --text: #f8fafc;
+  --text-dim: #94a3b8;
+  --border: 1px solid rgba(0, 255, 255, 0.4);
+  --glow: 0 0 10px rgba(0, 255, 255, 0.6);
+  --glow-magenta: 0 0 10px rgba(255, 0, 255, 0.6);
+  --scanline-opacity: 0.06;
+  --font-mono: 'Fira Code', monospace;
+  --font-sans: 'Fira Sans', sans-serif;
+  --transition: 150ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Scanlines overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.card {
+  background: var(--card-bg);
+  border: var(--border);
+  box-shadow: var(--glow);
+}
+
+.neon-text {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.btn-neon {
+  background: transparent;
+  border: var(--border);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--glow);
+  padding: 4px 12px;
+}
+
+.btn-neon:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+}
+
+.section-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* Section header (person card): accent bar + bright label + trailing rule. */
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+}
+.sec-bar {
+  width: 3px;
+  height: 13px;
+  flex-shrink: 0;
+  border-radius: 1px;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 7px var(--neon-cyan);
+}
+.sec-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #7df9ff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.35);
+}
+.sec-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 255, 0.28), rgba(0, 255, 255, 0.02));
+}
+.sec-right {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+/* Dark scrollbars aligned with design */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #080e1c;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Planner strips: scroll via wheel/trackpad with NO scrollbar by default (the months
+   bar on top and every interior strip stay clean). Only the bottom strip wears
+   `.planner-strip--bar` — a thin, dark, barely-visible track so you can see and drag
+   the scroll position. All strips are scroll-synced, so dragging the bottom one moves
+   them together. */
+.planner-strip {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.planner-strip::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+.planner-strip--bar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 140, 160, 0.22) transparent;
+}
+.planner-strip--bar::-webkit-scrollbar {
+  height: 6px;
+}
+.planner-strip--bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.planner-strip--bar::-webkit-scrollbar-thumb {
+  background: rgba(120, 140, 160, 0.2);
+  border-radius: 3px;
+}
+.planner-strip--bar::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 140, 160, 0.38);
+}
+
+/* Rendered markdown inside goal/accomplishment descriptions (compact) */
+.goal-md > *:first-child {
+  margin-top: 0;
+}
+.goal-md p {
+  margin: 2px 0;
+}
+.goal-md ul,
+.goal-md ol {
+  margin: 2px 0;
+  padding-left: 16px;
+}
+.goal-md li {
+  margin: 1px 0;
+}
+.goal-md strong {
+  color: var(--text);
+}
+.goal-md code {
+  background: rgba(0, 255, 255, 0.08);
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+/* Rich-text (TipTap) editor surface for task descriptions.
+   Without this the .ProseMirror area has no color/min-height — text is invisible
+   on the dark panel and the box collapses. It grows with content up to a cap. */
+.rte-content .ProseMirror {
+  min-height: 90px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 9px 11px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+  outline: none;
+  caret-color: var(--neon-cyan);
+}
+.rte-content .ProseMirror > *:first-child {
+  margin-top: 0;
+}
+.rte-content .ProseMirror p {
+  margin: 0;
+}
+.rte-content .ProseMirror ul,
+.rte-content .ProseMirror ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.rte-content .ProseMirror li {
+  margin: 2px 0;
+}
+.rte-content .ProseMirror li > p {
+  margin: 0;
+}
+.rte-content .ProseMirror h1,
+.rte-content .ProseMirror h2,
+.rte-content .ProseMirror h3 {
+  margin: 10px 0 4px;
+  color: #f2f9ff;
+  line-height: 1.3;
+  font-weight: 700;
+}
+.rte-content .ProseMirror h1 {
+  font-size: 19px;
+}
+.rte-content .ProseMirror h2 {
+  font-size: 17px;
+}
+.rte-content .ProseMirror h3 {
+  font-size: 15px;
+}
+.rte-content .ProseMirror strong {
+  color: #f2f9ff;
+}
+.rte-content .ProseMirror a {
+  color: var(--neon-cyan);
+  text-decoration: underline;
+}
+/* placeholder (from @tiptap/extensions Placeholder) */
+.rte-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: rgba(170, 186, 205, 0.55);
+  font-style: italic;
+}
+
+/* Minimalist check glyph — subtle pop on press */
+.goal-check {
+  transition:
+    transform 120ms ease,
+    color 200ms ease,
+    text-shadow 200ms ease;
+}
+.goal-check:hover {
+  transform: scale(1.15);
+}
+.goal-check:active {
+  transform: scale(1.4);
+}
+
+/* Minimized expand chevron — brightens on hover */
+.goal-chevron:hover {
+  color: var(--neon-cyan) !important;
+}

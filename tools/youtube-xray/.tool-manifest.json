@@ -1,0 +1,6 @@
+{
+  "name": "youtube-xray",
+  "description": "YouTube video analysis and transcript processing",
+  "output_dir": null,
+  "output_glob": null
+}

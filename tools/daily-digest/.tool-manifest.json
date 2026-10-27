@@ -1,0 +1,6 @@
+{
+  "name": "daily-digest",
+  "description": "Fetches GitHub Trending, HackerNews, and YouTube digests",
+  "output_dir": "../../vault/knowledge-hub/digests",
+  "output_glob": "*.md"
+}

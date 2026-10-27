@@ -1,0 +1,34 @@
+{
+  "vitals": [
+    {
+      "id": "meeting-notes",
+      "name": "meeting-notes",
+      "tool": "meeting-notes",
+      "description": "Syncs meeting notes (Gemini via Gmail, Granola) into the vault",
+      "output_dir": "knowledge-hub/meeting-notes",
+      "output_glob": "**/*.md",
+      "stale_after_hours": 24,
+      "run": ["python3", "tools/meeting-notes/sync_gemini_notes.py"]
+    },
+    {
+      "id": "daily-digest",
+      "name": "daily-digest",
+      "tool": "daily-digest",
+      "description": "GitHub Trending + HN + YouTube digest",
+      "output_dir": "knowledge-hub/digests",
+      "output_glob": "*.md",
+      "stale_after_hours": 24,
+      "run": ["bash", "tools/daily-digest/run-digest.sh"]
+    },
+    {
+      "id": "graphify",
+      "name": "graphify",
+      "tool": "graphify-out",
+      "description": "Knowledge graph of the engine + vault",
+      "output_dir": "graphify-out",
+      "output_glob": "GRAPH_REPORT.md",
+      "stale_after_hours": 168,
+      "run": ["graphify", "update", "."]
+    }
+  ]
+}

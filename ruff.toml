@@ -1,0 +1,16 @@
+# Formatting config for all Python tools (run: python3 -m ruff format tools/ skills/)
+# Kept as ruff.toml (not pyproject.toml) on purpose: a root pyproject.toml changes
+# pytest's rootdir for tools without their own pytest.ini and breaks the
+# test-pipeline's collection check.
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    ".venv",
+    "node_modules",
+    "graphify-out",
+    "knowledge-hub",
+    ".worktrees",
+]
+
+[format]
+quote-style = "double"

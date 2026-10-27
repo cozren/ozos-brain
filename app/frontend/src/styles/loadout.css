@@ -1,0 +1,217 @@
+/* Loadout Canvas — the shared, page-agnostic layout editor. Neon-cyan dark
+   idiom, matching datahub.css / the cyberpunk theme vars. */
+
+.loadout-canvas {
+  padding: 8px 24px 48px;
+}
+
+/* Empty state: one big centered + that starts the whole layout. */
+.loadout-canvas--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.loadout-add-big {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  border: 1px dashed rgba(0, 255, 255, 0.4);
+  background: rgba(0, 255, 255, 0.04);
+  color: var(--neon-cyan);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.loadout-add-big:hover {
+  border-color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 16px rgba(0, 255, 255, 0.25);
+}
+
+/* A row: tiles laid out left→right; scrolls sideways on overflow. */
+.loadout-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  /* Alignment when the row isn't full; `safe` keeps the leftmost tile
+     reachable (falls back to start-alignment) once the row overflows.
+     `data-align` (left/center/right) overrides the default centre below. */
+  justify-content: safe center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.015);
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Minimal scroller: thin and invisible until the row is hovered, so it
+     doesn't eat vertical space visually when idle. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.loadout-row[data-align='left'] {
+  justify-content: safe flex-start;
+}
+.loadout-row[data-align='right'] {
+  justify-content: safe flex-end;
+}
+.loadout-row:hover {
+  scrollbar-color: rgba(0, 255, 255, 0.35) transparent;
+}
+.loadout-row.is-over {
+  border-color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.06);
+}
+
+/* Alignment drop strip — appears at the top of every row while dragging so you
+   can see (and pick) where to drop for left / center / right alignment. It's
+   purely a visual + drop target: pointer-events off (dnd-kit measures rects),
+   so it never blocks the tiles beneath outside a drag. */
+.loadout-align-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 38px;
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  z-index: 6;
+  pointer-events: none;
+}
+.loadout-align-zone {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.72);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+/* The row's current alignment reads as a solid (not dashed) chip. */
+.loadout-align-zone.is-current {
+  border-style: solid;
+  border-color: rgba(0, 255, 255, 0.5);
+  color: var(--text);
+}
+/* Hovered drop target — the one that will win on release. */
+.loadout-align-zone.is-over {
+  border-style: solid;
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.14);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+}
+
+/* A tile: corner drag grip + body + corner resize handle. */
+.loadout-tile {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.6);
+  overflow: hidden;
+}
+
+/* Drag grip pinned in the top-left corner, on the same line as the tile's
+   own header (title / remove X) — drag chrome costs no extra height. */
+.loadout-tile__grip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  cursor: grab;
+  color: var(--text-dim);
+  touch-action: none;
+}
+.loadout-tile__grip:hover {
+  color: var(--neon-cyan);
+}
+.loadout-tile__grip:active {
+  cursor: grabbing;
+}
+
+.loadout-tile__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Corner resize handle — custom pointer handler, not a resize library. */
+.loadout-tile__resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(135deg, transparent 0 50%, rgba(0, 255, 255, 0.5) 50% 100%);
+}
+.loadout-tile__resize:hover {
+  background: linear-gradient(135deg, transparent 0 50%, var(--neon-cyan) 50% 100%);
+}
+
+/* Trailing + at the right end of a row. */
+.loadout-add-tile {
+  flex: 0 0 auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 255, 255, 0.3);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.loadout-add-tile:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.06);
+}
+
+/* + strip below the last row. */
+.loadout-add-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(0, 255, 255, 0.25);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.loadout-add-row:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.05);
+}

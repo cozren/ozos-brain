@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Task Board</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #09090f;
+  --surface:   #0f0f18;
+  --surface-2: #15151f;
+  --surface-3: #1c1c2a;
+  --border:    #1e1e2e;
+  --border-hi: #2c2c40;
+
+  --text:  #ddddd7;
+  --muted: #44445c;
+  --dim:   #6a6a82;
+
+  --done:   #478a5c;
+  --danger: #c85050;
+
+  --mono: 'Courier New', Courier, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+
+  --r: 5px;
+  --t: 140ms ease;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100%;
+  padding: 48px 48px 96px;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 35% at 8% 0%,  rgba(93,158,248,.05) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 28% at 92% 95%, rgba(155,114,213,.04) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body > * { position: relative; z-index: 1; }
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+
+.hdr {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding-bottom: 28px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hdr-export {
+  margin-left: auto;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Export button ─────────────────────────────────── */
+@keyframes export-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(93,158,248,0), 0 0 0 0 rgba(93,158,248,0); }
+  50%       { box-shadow: 0 0 6px 1px rgba(93,158,248,.18), inset 0 0 8px 0 rgba(93,158,248,.07); }
+}
+@keyframes export-sweep {
+  0%   { left: -60%; }
+  100% { left: 120%; }
+}
+
+.btn-export {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #5d9ef8;
+  background: rgba(93,158,248,.04);
+  border: 1px solid rgba(93,158,248,.22);
+  border-radius: 3px;
+  padding: 5px 13px 5px 10px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  animation: export-pulse 3.2s ease-in-out infinite;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn-export .exp-icon {
+  display: flex;
+  align-items: center;
+  opacity: .7;
+  transition: opacity 120ms ease, transform 160ms ease;
+}
+
+.btn-export::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(93,158,248,.18), transparent);
+  transform: skewX(-18deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 80ms ease;
+}
+
+.btn-export:hover {
+  color: #8fbcff;
+  border-color: rgba(93,158,248,.55);
+  background: rgba(93,158,248,.09);
+  box-shadow: 0 0 12px 2px rgba(93,158,248,.12), inset 0 0 12px 0 rgba(93,158,248,.05);
+  animation: none;
+}
+
+.btn-export:hover::before {
+  opacity: 1;
+  animation: export-sweep 0.55s ease forwards;
+}
+
+.btn-export:hover .exp-icon {
+  opacity: 1;
+  transform: translateY(2px);
+}
+
+.btn-export:active {
+  background: rgba(93,158,248,.14);
+  transform: scale(.97);
+}
+
+.hdr-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin-top: 6px;
+  color: var(--dim);
+}
+
+.hdr-title {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: .07em;
+  color: var(--text);
+  line-height: 1.05;
+  margin-bottom: 8px;
+}
+
+.hdr-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.hdr-sep { color: var(--muted); }
+
+.hdr-count .n { color: var(--text); }
+
+/* ═══════════════════════════════════════════
+   FILTER BAR
+═══════════════════════════════════════════ */
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.filter-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.fp {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.fp:hover { border-color: var(--border-hi); color: var(--text); }
+.fp.all.active { background: var(--surface-3); border-color: var(--border-hi); color: var(--text); }
+.fp.tag-p.active {
+  background: color-mix(in srgb, var(--tc) 14%, transparent);
+  border-color: color-mix(in srgb, var(--tc) 38%, transparent);
+  color: var(--tc);
+}
+
+/* ═══════════════════════════════════════════
+   KANBAN GRID
+═══════════════════════════════════════════ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════════
+   COLUMN
+═══════════════════════════════════════════ */
+
+.col {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.col-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.col.work   .col-lbl { color: #e0a540; }
+.col.ozos   .col-lbl { color: #5d9ef8; }
+.col.future .col-lbl { color: #9b72d5; }
+
+.col-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════
+   TASK ITEMS
+═══════════════════════════════════════════ */
+
+.tasks { list-style: none; padding: 4px 0; }
+
+.ti {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 14px 8px 15px;
+  border-left: 2px solid transparent;
+  transition: background var(--t), border-color var(--t);
+}
+.ti:hover { background: var(--surface-2); }
+.ti.ph { border-left-color: rgba(224,80,80,.4); }
+.ti.ps { border-left-color: rgba(68,68,90,.4); }
+.ti.filtered { display: none; }
+
+/* checkbox */
+.chk {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--border-hi);
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 3px;
+  transition: border-color var(--t), background var(--t);
+  position: relative;
+}
+.col.work   .chk:hover { border-color: #e0a540; }
+.col.ozos   .chk:hover { border-color: #5d9ef8; }
+.col.future .chk:hover { border-color: #9b72d5; }
+.chk:checked { background: var(--done); border-color: var(--done); }
+.chk:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 1px;
+  width: 5px; height: 8px;
+  border: 1.5px solid #fff;
+  border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+
+/* task body */
+.tb {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.t-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.t-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.t-badges {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  justify-content: flex-end;
+  max-width: 110px;
+}
+
+.pdot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tag-b {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--tc) 13%, transparent);
+  color: var(--tc);
+  border: 1px solid color-mix(in srgb, var(--tc) 26%, transparent);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.t-preview {
+  font-size: 11.5px;
+  color: var(--dim);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.t-del {
+  opacity: 0;
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 15px; line-height: 1;
+  transition: opacity var(--t), color var(--t), background var(--t);
+}
+.ti:hover .t-del { opacity: 1; }
+.t-del:hover { color: var(--danger); background: rgba(200,80,80,.1); }
+
+/* animations */
+@keyframes ti-in  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+@keyframes ti-out { from { opacity:1; transform:translateX(0); max-height:80px; padding-top:8px; padding-bottom:8px; } to { opacity:0; transform:translateX(8px); max-height:0; padding-top:0; padding-bottom:0; } }
+.ai { animation: ti-in  180ms ease forwards; }
+.ao { animation: ti-out 250ms ease forwards; overflow: hidden; }
+
+/* drag and drop */
+.dragging { opacity: .3; pointer-events: none; }
+.drop-ind {
+  height: 2px;
+  background: var(--dim);
+  margin: 1px 14px;
+  border-radius: 2px;
+  list-style: none;
+  pointer-events: none;
+  position: relative;
+}
+.drop-ind::before {
+  content: '';
+  position: absolute;
+  left: -4px; top: -3px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--dim);
+}
+
+/* col empty */
+.col-empty {
+  padding: 12px 16px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  list-style: none;
+}
+
+/* ═══════════════════════════════════════════
+   ADD INPUT
+═══════════════════════════════════════════ */
+
+.add-wrap {
+  padding: 9px 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.add-inp {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--sans);
+  padding: 4px 0;
+  outline: none;
+  transition: border-color var(--t);
+  caret-color: var(--dim);
+}
+.add-inp::placeholder { color: var(--muted); }
+.col.work   .add-inp:focus { border-color: #e0a540; }
+.col.ozos   .add-inp:focus { border-color: #5d9ef8; }
+.col.future .add-inp:focus { border-color: #9b72d5; }
+
+/* ═══════════════════════════════════════════
+   DONE SECTION
+═══════════════════════════════════════════ */
+
+.done-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.done-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--t);
+}
+.done-toggle:hover { background: var(--surface-2); }
+
+.done-tl { display: flex; align-items: center; gap: 10px; }
+
+.done-chev {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+  width: 12px;
+  display: inline-block;
+  transition: transform var(--t);
+}
+.done-chev.open { transform: rotate(90deg); }
+
+.done-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--done);
+}
+
+.done-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.done-acts { display: flex; align-items: center; gap: 7px; }
+
+.done-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.done-btn:hover             { color: var(--text); border-color: var(--border-hi); background: var(--surface-2); }
+.done-btn.exp:hover         { color: #5d9ef8; border-color: rgba(93,158,248,.35); background: rgba(93,158,248,.06); }
+.done-btn.clr:hover         { color: var(--danger); border-color: rgba(200,80,80,.35); background: rgba(200,80,80,.06); }
+
+.done-body { border-top: 1px solid var(--border); display: none; }
+
+.done-list { list-style: none; }
+
+.done-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  transition: background var(--t);
+}
+.done-item:first-child { border-top: none; }
+.done-item:hover { background: var(--surface-2); }
+
+.done-chk {
+  width: 15px; height: 15px;
+  border-radius: 3px;
+  border: 1.5px solid rgba(71,138,92,.4);
+  background: rgba(71,138,92,.1);
+  flex-shrink: 0;
+  margin-top: 3px;
+  position: relative;
+}
+.done-chk::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 1px;
+  width: 5px; height: 8px;
+  border: 1.5px solid rgba(71,138,92,.5);
+  border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+
+.done-txt {
+  flex: 1;
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--muted);
+  text-decoration-thickness: 1px;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.done-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.done-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.done-src {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.done-ts {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.done-del {
+  opacity: 0;
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  flex-shrink: 0; margin-top: 1px;
+  font-size: 15px; line-height: 1;
+  transition: opacity var(--t), color var(--t), background var(--t);
+}
+.done-item:hover .done-del { opacity: 1; }
+.done-del:hover { color: var(--danger); background: rgba(200,80,80,.1); }
+
+.done-empty {
+  padding: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+
+.mo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.mo.hidden { display: none; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-hi);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.65);
+  animation: mo-in 170ms ease forwards;
+}
+
+@keyframes mo-in {
+  from { opacity: 0; transform: scale(.97) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.mo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mo-sec-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.mo-close {
+  background: none; border: none;
+  color: var(--dim); cursor: pointer;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  font-size: 17px;
+  transition: color var(--t), background var(--t);
+}
+.mo-close:hover { color: var(--text); background: var(--surface-3); }
+
+.mo-body { padding: 18px; }
+
+.mo-title {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-hi);
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--sans);
+  padding: 4px 0 8px;
+  outline: none;
+  margin-bottom: 14px;
+  transition: border-color var(--t);
+  caret-color: var(--dim);
+}
+.mo-title:focus { border-color: var(--dim); }
+.mo-title::placeholder { color: var(--muted); }
+
+.mo-desc {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-family: var(--mono);
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 220px;
+  overflow-y: auto;
+  transition: border-color var(--t);
+  caret-color: var(--dim);
+  line-height: 1.65;
+  margin-bottom: 16px;
+  tab-size: 2;
+}
+.mo-desc:focus { border-color: var(--border-hi); }
+.mo-desc::placeholder { color: var(--muted); font-family: var(--sans); font-size: 12px; }
+
+.mo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.mo-row:last-child { margin-bottom: 0; }
+
+.mo-row-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 58px;
+  padding-top: 5px;
+  flex-shrink: 0;
+}
+
+.opt-g { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.ob {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .05em;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all var(--t);
+  --oc: #5d9ef8;
+}
+.ob:hover { border-color: var(--border-hi); color: var(--text); }
+.ob.sel {
+  background: color-mix(in srgb, var(--oc) 14%, transparent);
+  border-color: color-mix(in srgb, var(--oc) 38%, transparent);
+  color: var(--oc);
+}
+.ob.none-ob.sel {
+  background: var(--surface-3);
+  border-color: var(--border-hi);
+  color: var(--dim);
+}
+
+.mo-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.mb {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--t);
+  background: transparent;
+}
+
+.mb-save {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: var(--border-hi);
+}
+.mb-save:hover { background: var(--border-hi); }
+
+.mb-del {
+  color: var(--muted);
+}
+.mb-del:hover { color: var(--danger); border-color: rgba(200,80,80,.35); background: rgba(200,80,80,.06); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+
+@media (max-width: 860px) {
+  body { padding: 32px 20px 60px; }
+  .grid { grid-template-columns: 1fr; }
+  .hdr-title { font-size: 24px; }
+}
+
+@media (max-width: 500px) {
+  .done-meta { display: none; }
+  .filter-bar { gap: 4px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <svg class="hdr-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4"  y="4"  width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+    <rect x="22" y="4"  width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity=".85"/>
+    <rect x="4"  y="22" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity=".85"/>
+    <rect x="22" y="22" width="14" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+    <polyline points="7,29 10.5,33 16,25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div>
+    <h1 class="hdr-title">MY TASK BOARD</h1>
+    <div class="hdr-sub">
+      <span id="hdr-date"></span>
+      <span class="hdr-sep">·</span>
+      <span class="hdr-count"><span class="n" id="total-open">0</span>&thinsp;open</span>
+    </div>
+  </div>
+  <div class="hdr-export">
+    <button class="btn-export" id="btn-exp">
+      <span class="exp-icon">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.5 1v6.5M2.5 5l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1.5 9.5h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      export.md
+    </button>
+  </div>
+</header>
+
+<!-- FILTER BAR -->
+<div class="filter-bar" id="filter-bar">
+  <span class="filter-lbl">Filter</span>
+  <button class="fp all active" data-tag="">All</button>
+</div>
+
+<!-- KANBAN -->
+<div class="grid">
+  <div class="col work">
+    <div class="col-head">
+      <span class="col-lbl">Work Tasks</span>
+      <span class="col-badge" id="cnt-work">0</span>
+    </div>
+    <ul class="tasks" id="lst-work"></ul>
+    <div class="add-wrap">
+      <input class="add-inp" type="text" placeholder="Add task — press Enter" data-sec="work" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="col ozos">
+    <div class="col-head">
+      <span class="col-lbl">OZOS Tasks</span>
+      <span class="col-badge" id="cnt-ozos">0</span>
+    </div>
+    <ul class="tasks" id="lst-ozos"></ul>
+    <div class="add-wrap">
+      <input class="add-inp" type="text" placeholder="Add task — press Enter" data-sec="ozos" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="col future">
+    <div class="col-head">
+      <span class="col-lbl">Future Exploration</span>
+      <span class="col-badge" id="cnt-future">0</span>
+    </div>
+    <ul class="tasks" id="lst-future"></ul>
+    <div class="add-wrap">
+      <input class="add-inp" type="text" placeholder="Add task — press Enter" data-sec="future" autocomplete="off">
+    </div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div class="done-card">
+  <div class="done-toggle" id="done-toggle">
+    <div class="done-tl">
+      <span class="done-chev" id="done-chev">›</span>
+      <span class="done-lbl">Done</span>
+      <span class="done-badge" id="cnt-done">0</span>
+    </div>
+    <div class="done-acts">
+      <button class="done-btn clr" id="btn-clr">Clear all</button>
+    </div>
+  </div>
+  <div class="done-body" id="done-body">
+    <ul class="done-list" id="lst-done"></ul>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="mo hidden" id="mo">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mo-title-input">
+    <div class="mo-head">
+      <span class="mo-sec-lbl" id="mo-sec-lbl"></span>
+      <button class="mo-close" id="mo-close" title="Close (Esc)">×</button>
+    </div>
+    <div class="mo-body">
+      <input class="mo-title" id="mo-title-input" type="text" placeholder="Task title" autocomplete="off">
+      <textarea class="mo-desc" id="mo-desc" placeholder="Notes, links, code snippets…" rows="4"></textarea>
+      <div class="mo-row">
+        <span class="mo-row-lbl">Tag</span>
+        <div class="opt-g" id="mo-tags"></div>
+      </div>
+      <div class="mo-row">
+        <span class="mo-row-lbl">Priority</span>
+        <div class="opt-g" id="mo-pris"></div>
+      </div>
+    </div>
+    <div class="mo-foot">
+      <button class="mb mb-del" id="mo-del">Delete task</button>
+      <button class="mb mb-save" id="mo-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   STORAGE CONTRACT
+   ─────────────────────────────────────────────────────
+   Primary key : 'ozos-tasks-v1'
+   Backup key  : 'todo_backup_json'
+
+   Shape of primary key value:
+   {
+     tasks: { work: Task[], ozos: Task[], future: Task[] },
+     done:  Task[]
+   }
+   Task: { id, text, section, createdAt, description,
+           tags: string[], priority: 'high'|'normal'|'someday',
+           completedAt? }
+
+   DO NOT rename these keys or change this shape without
+   writing a forward migration. The migrateStorage()
+   function below must be updated to handle old shapes.
+   The backup key must never be deleted.
+════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   CONFIG — edit to customise tags & sections
+════════════════════════════════════════════════════════ */
+
+const TAGS = [
+  { id: 'work',     label: 'Work',     color: '#e0a540' },
+  { id: 'product', label: 'Product', color: '#3dc9a0' },
+  { id: 'ads',      label: 'Ads',      color: '#e07040' },
+  { id: 'ozos',     label: 'OZOS',     color: '#5d9ef8' },
+  { id: 'personal', label: 'Personal', color: '#e06090' },
+  { id: 'learning', label: 'Learning', color: '#9b72d5' },
+];
+
+const PRIORITIES = [
+  { id: 'high',    label: 'High',    color: '#e05050' },
+  { id: 'normal',  label: 'Normal',  color: '#5d9ef8' },
+  { id: 'someday', label: 'Someday', color: '#606070' },
+];
+
+const SECTIONS = [
+  { id: 'work',   label: 'Work Tasks' },
+  { id: 'ozos',   label: 'OZOS Tasks' },
+  { id: 'future', label: 'Future Exploration' },
+];
+
+/* ════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════ */
+
+const KEY = 'ozos-tasks-v1';
+let S = { tasks: { work: [], ozos: [], future: [] }, done: [] };
+let activeFilter = '';
+let doneOpen     = false;
+let mState       = null;   // { id, sec } of task in modal
+let dragId       = null;
+let dragSec      = null;
+let dropEl       = null;   // current drop indicator element
+
+/* ════════════════════════════════════════════════════════
+   STORAGE MIGRATION — runs once before anything renders
+════════════════════════════════════════════════════════ */
+
+// All key names ever used or plausibly used — checked in priority order.
+// todo_backup_json is checked last as a last-resort recovery source.
+const LEGACY_KEYS = [
+  'ozos-tasks', 'ozos-tasks-v0',
+  'tasks', 'todos', 'taskData', 'board', 'columns',
+  'todo_backup_json',
+];
+
+// Attempt to coerce any known historical shape into the current shape.
+function migrateData(data) {
+  if (!data || typeof data !== 'object') return null;
+
+  const blank = () => ({ tasks: { work: [], ozos: [], future: [] }, done: [] });
+
+  // Shape A — current / v1: { tasks: { work, ozos, future }, done }
+  if (!Array.isArray(data.tasks) && data.tasks && typeof data.tasks === 'object') {
+    const s = blank();
+    SECTIONS.forEach(({ id }) => {
+      s.tasks[id] = Array.isArray(data.tasks[id]) ? data.tasks[id] : [];
+    });
+    s.done = Array.isArray(data.done) ? data.done : [];
+    return s;
+  }
+
+  // Shape B — flat tasks array: { tasks: [...], done: [...] }
+  if (Array.isArray(data.tasks)) {
+    const s = blank();
+    data.tasks.forEach(t => {
+      const sec = t.section || t.sec || t.column || 'work';
+      (s.tasks[sec] || s.tasks.work).push(t);
+    });
+    s.done = Array.isArray(data.done) ? data.done : [];
+    return s;
+  }
+
+  // Shape C — columnar: { columns: { work, ozos, future }, done }
+  if (data.columns && typeof data.columns === 'object') {
+    const s = blank();
+    SECTIONS.forEach(({ id }) => {
+      s.tasks[id] = Array.isArray(data.columns[id]) ? data.columns[id] : [];
+    });
+    s.done = Array.isArray(data.done) ? data.done : [];
+    return s;
+  }
+
+  // Shape D — bare array of task objects
+  if (Array.isArray(data)) {
+    const s = blank();
+    data.forEach(t => {
+      if (t.completedAt) {
+        s.done.push(t);
+      } else {
+        const sec = t.section || t.sec || t.column || 'work';
+        (s.tasks[sec] || s.tasks.work).push(t);
+      }
+    });
+    return s;
+  }
+
+  return null;
+}
+
+// Runs before load(). Only acts when the primary key is absent.
+function migrateStorage() {
+  if (localStorage.getItem(KEY)) return; // primary key present — nothing to do
+
+  for (const legacyKey of LEGACY_KEYS) {
+    const raw = localStorage.getItem(legacyKey);
+    if (!raw) continue;
+    try {
+      const parsed   = JSON.parse(raw);
+      const migrated = migrateData(parsed);
+      if (migrated) {
+        localStorage.setItem(KEY, JSON.stringify(migrated));
+        // Preserve the backup key; remove other legacy keys.
+        if (legacyKey !== 'todo_backup_json') localStorage.removeItem(legacyKey);
+        console.info(`[todo] Recovered data from legacy key "${legacyKey}" → "${KEY}"`);
+        return;
+      }
+    } catch (e) {
+      console.warn(`[todo] Could not parse legacy key "${legacyKey}":`, e);
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   PERSISTENCE
+════════════════════════════════════════════════════════ */
+
+function load() {
+  try { const r = localStorage.getItem(KEY); if (r) S = JSON.parse(r); } catch(_) {}
+  SECTIONS.forEach(({ id }) => { if (!S.tasks[id]) S.tasks[id] = []; });
+  if (!S.done) S.done = [];
+  // migrate old tasks — add missing fields
+  SECTIONS.forEach(({ id }) => { S.tasks[id] = S.tasks[id].map(norm); });
+  S.done = S.done.map(norm);
+}
+
+function save() {
+  const json = JSON.stringify(S);
+  localStorage.setItem(KEY, json);
+  // Safety net — always keep a copy under the backup key. Never deleted.
+  try { localStorage.setItem('todo_backup_json', json); } catch(_) {}
+}
+
+function norm(t) {
+  const base = { description: '', tags: [], priority: 'normal', ...t };
+  // migrate old single-tag field to tags array
+  if (base.tag !== undefined) {
+    if (base.tag && !base.tags.includes(base.tag)) base.tags = [base.tag];
+    delete base.tag;
+  }
+  if (!Array.isArray(base.tags)) base.tags = base.tags ? [base.tags] : [];
+  return base;
+}
+
+/* ════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════ */
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function fmtTs(ts) {
+  const d    = new Date(ts);
+  const day  = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  return `${day}, ${time}`;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function tagInfo(id)  { return TAGS.find(t => t.id === id) || null; }
+function priInfo(id)  { return PRIORITIES.find(p => p.id === id) || PRIORITIES[1]; }
+function secLabel(id) { return (SECTIONS.find(s => s.id === id) || {}).label || id; }
+function secColor(id) { return { work:'#e0a540', ozos:'#5d9ef8', future:'#9b72d5' }[id] || '#6a6a82'; }
+
+/* ════════════════════════════════════════════════════════
+   ELEMENT BUILDERS
+════════════════════════════════════════════════════════ */
+
+function mkTaskEl(task, sec, animate) {
+  const taskTags   = task.tags || [];
+  const tagObjects = taskTags.map(tagInfo).filter(Boolean);
+  const pri        = priInfo(task.priority);
+  const isFiltered = activeFilter && !taskTags.includes(activeFilter);
+
+  const badgesHtml = [
+    (task.priority === 'high' || task.priority === 'someday')
+      ? `<span class="pdot" title="${pri.label}" style="background:${pri.color}"></span>`
+      : '',
+    ...tagObjects.map(t => `<span class="tag-b" style="--tc:${t.color}">${esc(t.label)}</span>`),
+  ].join('');
+
+  const previewHtml = task.description
+    ? `<div class="t-preview">${esc(task.description.split('\n')[0])}</div>`
+    : '';
+
+  const li = document.createElement('li');
+  li.className = [
+    'ti',
+    task.priority === 'high'    ? 'ph' : '',
+    task.priority === 'someday' ? 'ps' : '',
+    animate    ? 'ai' : '',
+    isFiltered ? 'filtered' : '',
+  ].filter(Boolean).join(' ');
+  li.dataset.id   = task.id;
+  li.dataset.tags = taskTags.join(',');
+  li.draggable    = true;
+
+  li.innerHTML = `
+    <input type="checkbox" class="chk" title="Mark complete">
+    <div class="tb" title="Click to edit">
+      <div class="t-top">
+        <span class="t-title">${esc(task.text)}</span>
+        <div class="t-badges">${badgesHtml}</div>
+      </div>
+      ${previewHtml}
+    </div>
+    <button class="t-del" title="Delete">×</button>`;
+
+  li.querySelector('.chk').onchange  = (e) => { e.stopPropagation(); completeTask(task.id, sec, li); };
+  li.querySelector('.tb').onclick    = ()  => openModal(task.id, sec);
+  li.querySelector('.t-del').onclick = (e) => { e.stopPropagation(); deleteTask(task.id, sec, li); };
+
+  li.addEventListener('dragstart', (e) => {
+    dragId  = task.id;
+    dragSec = sec;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task.id);
+    requestAnimationFrame(() => li.classList.add('dragging'));
+  });
+  li.addEventListener('dragend', () => {
+    li.classList.remove('dragging');
+    removeDropIndicator();
+    dragId = dragSec = null;
+  });
+
+  return li;
+}
+
+function mkDoneEl(task, animate) {
+  const tagHtml = (task.tags || []).map(tid => {
+    const t = tagInfo(tid);
+    return t ? `<span class="tag-b" style="--tc:${t.color};opacity:.5">${esc(t.label)}</span>` : '';
+  }).join('');
+
+  const li = document.createElement('li');
+  li.className = 'done-item' + (animate ? ' ai' : '');
+  li.dataset.id = task.id;
+
+  li.innerHTML = `
+    <div class="done-chk"></div>
+    <span class="done-txt">${esc(task.text)}</span>
+    <div class="done-meta">
+      <div class="done-meta-top">
+        ${tagHtml}
+        <span class="done-src" style="color:${secColor(task.section)}">${secLabel(task.section)}</span>
+      </div>
+      <span class="done-ts">${fmtTs(task.completedAt)}</span>
+    </div>
+    <button class="done-del" title="Delete">×</button>`;
+
+  li.querySelector('.done-del').onclick = () => deleteDone(task.id, li);
+  return li;
+}
+
+/* ════════════════════════════════════════════════════════
+   ACTIONS
+════════════════════════════════════════════════════════ */
+
+function completeTask(id, sec, li) {
+  const idx = S.tasks[sec].findIndex(t => t.id === id);
+  if (idx < 0) return;
+  const task = { ...S.tasks[sec][idx], completedAt: Date.now() };
+  li.classList.add('ao');
+  setTimeout(() => {
+    S.tasks[sec].splice(idx, 1);
+    li.remove();
+    S.done.unshift(task);
+    save();
+    if (doneOpen) {
+      const lst = document.getElementById('lst-done');
+      const emp = lst.querySelector('.done-empty');
+      if (emp) emp.remove();
+      lst.insertBefore(mkDoneEl(task, true), lst.firstChild);
+    }
+    refresh();
+  }, 260);
+}
+
+function deleteTask(id, sec, li) {
+  const idx = S.tasks[sec].findIndex(t => t.id === id);
+  if (idx < 0) return;
+  li.classList.add('ao');
+  setTimeout(() => {
+    S.tasks[sec].splice(idx, 1);
+    li.remove();
+    save();
+    refresh();
+  }, 260);
+}
+
+function deleteDone(id, li) {
+  const idx = S.done.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  li.classList.add('ao');
+  setTimeout(() => {
+    S.done.splice(idx, 1);
+    li.remove();
+    save();
+    refresh();
+  }, 260);
+}
+
+function addTask(text, sec) {
+  if (!text.trim()) return;
+  const task = norm({ id: uid(), text: text.trim(), section: sec, createdAt: Date.now() });
+  S.tasks[sec].push(task);
+  save();
+  const lst = document.getElementById(`lst-${sec}`);
+  const emp = lst.querySelector('.col-empty');
+  if (emp) emp.remove();
+  lst.appendChild(mkTaskEl(task, sec, true));
+  refresh();
+}
+
+/* ════════════════════════════════════════════════════════
+   MODAL
+════════════════════════════════════════════════════════ */
+
+function openModal(id, sec) {
+  const task = S.tasks[sec].find(t => t.id === id);
+  if (!task) return;
+  mState = { id, sec };
+
+  document.getElementById('mo-sec-lbl').textContent    = secLabel(sec);
+  document.getElementById('mo-title-input').value = task.text;
+  document.getElementById('mo-desc').value        = task.description || '';
+
+  // build tag buttons — multi-select, each toggles independently
+  const tg       = document.getElementById('mo-tags');
+  const taskTags = task.tags || [];
+  tg.innerHTML   = '';
+  TAGS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'ob' + (taskTags.includes(t.id) ? ' sel' : '');
+    b.style.setProperty('--oc', t.color);
+    b.textContent = t.label;
+    b.dataset.val = t.id;
+    b.onclick = () => b.classList.toggle('sel');
+    tg.appendChild(b);
+  });
+
+  // build priority buttons — exclusive select
+  const pg = document.getElementById('mo-pris');
+  pg.innerHTML = '';
+  PRIORITIES.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'ob' + (task.priority === p.id ? ' sel' : '');
+    b.style.setProperty('--oc', p.color);
+    b.textContent = p.label;
+    b.dataset.val = p.id;
+    b.onclick = () => { pg.querySelectorAll('.ob').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); };
+    pg.appendChild(b);
+  });
+
+  document.getElementById('mo').classList.remove('hidden');
+  requestAnimationFrame(() => document.getElementById('mo-title-input').focus());
+}
+
+function closeModal() {
+  document.getElementById('mo').classList.add('hidden');
+  mState = null;
+}
+
+function saveModal() {
+  if (!mState) return;
+  const { id, sec } = mState;
+  const idx = S.tasks[sec].findIndex(t => t.id === id);
+  if (idx < 0) { closeModal(); return; }
+
+  const titleVal = document.getElementById('mo-title-input').value.trim();
+  if (!titleVal) {
+    document.getElementById('mo-title-input').focus();
+    return;
+  }
+
+  const selTags = [...document.querySelectorAll('#mo-tags .ob.sel')].map(b => b.dataset.val);
+  const selPri  = document.querySelector('#mo-pris .ob.sel');
+
+  S.tasks[sec][idx] = {
+    ...S.tasks[sec][idx],
+    text:        titleVal,
+    description: document.getElementById('mo-desc').value,
+    tags:        selTags,
+    priority:    selPri ? selPri.dataset.val : 'normal',
+  };
+  save();
+
+  // replace DOM element
+  const lst   = document.getElementById(`lst-${sec}`);
+  const oldEl = lst.querySelector(`[data-id="${id}"]`);
+  if (oldEl) lst.replaceChild(mkTaskEl(S.tasks[sec][idx], sec, false), oldEl);
+
+  refresh();
+  closeModal();
+}
+
+function deleteFromModal() {
+  if (!mState) return;
+  const { id, sec } = mState;
+  closeModal();
+  const idx = S.tasks[sec].findIndex(t => t.id === id);
+  if (idx < 0) return;
+  const lst = document.getElementById(`lst-${sec}`);
+  const li  = lst.querySelector(`[data-id="${id}"]`);
+  if (li) {
+    li.classList.add('ao');
+    setTimeout(() => { S.tasks[sec].splice(idx, 1); li.remove(); save(); refresh(); }, 260);
+  } else {
+    S.tasks[sec].splice(idx, 1); save(); refresh();
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   DONE TOGGLE
+════════════════════════════════════════════════════════ */
+
+function toggleDone() {
+  doneOpen = !doneOpen;
+  document.getElementById('done-body').style.display = doneOpen ? 'block' : 'none';
+  document.getElementById('done-chev').classList.toggle('open', doneOpen);
+  if (doneOpen) renderDoneList();
+}
+
+function renderDoneList() {
+  const lst = document.getElementById('lst-done');
+  lst.innerHTML = '';
+  if (S.done.length === 0) {
+    const e = document.createElement('li');
+    e.className = 'done-empty';
+    e.textContent = 'Nothing completed yet.';
+    lst.appendChild(e);
+  } else {
+    S.done.forEach(t => lst.appendChild(mkDoneEl(t, false)));
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   FILTER
+════════════════════════════════════════════════════════ */
+
+function applyFilter(tag) {
+  activeFilter = tag;
+  document.querySelectorAll('.fp').forEach(p => {
+    p.classList.toggle('active', p.dataset.tag === tag);
+  });
+  document.querySelectorAll('.ti').forEach(li => {
+    if (!tag) {
+      li.classList.remove('filtered');
+    } else {
+      const liTags = (li.dataset.tags || '').split(',').filter(Boolean);
+      li.classList.toggle('filtered', !liTags.includes(tag));
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   EXPORT MARKDOWN
+════════════════════════════════════════════════════════ */
+
+function exportMarkdown() {
+  const now        = new Date();
+  const dateStr    = now.toISOString().slice(0, 10);
+  const lines      = [`# My Task Board — exported ${dateStr}`, ''];
+
+  SECTIONS.forEach(({ id, label }) => {
+    lines.push(`## ${label}`, '');
+    const tasks = S.tasks[id];
+    if (!tasks.length) {
+      lines.push('_No tasks._', '');
+    } else {
+      tasks.forEach(t => {
+        const pri    = t.priority && t.priority !== 'normal'
+                         ? ` (Priority: ${t.priority.charAt(0).toUpperCase() + t.priority.slice(1)})`
+                         : '';
+        const tags   = (t.tags || []).length ? ' ' + t.tags.map(tag => `#${tag}`).join(' ') : '';
+        lines.push(`- [ ] ${t.text}${pri}${tags}`);
+        if (t.description) {
+          t.description.split('\n').forEach(dl => lines.push(`      Description: ${dl}`));
+        }
+      });
+      lines.push('');
+    }
+  });
+
+  if (S.done.length) {
+    lines.push('## Done', '');
+    S.done.forEach(t => {
+      const ts  = new Date(t.completedAt).toISOString().slice(0, 10);
+      const tag = (t.tags || []).length ? ' ' + t.tags.map(tag => `#${tag}`).join(' ') : '';
+      lines.push(`- [x] ${t.text}${tag} — completed ${ts}`);
+    });
+    lines.push('');
+  }
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'todo-export.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ════════════════════════════════════════════════════════
+   DRAG AND DROP
+════════════════════════════════════════════════════════ */
+
+function getDragAfterEl(list, clientY) {
+  const items = [...list.querySelectorAll('.ti:not(.dragging):not(.col-empty)')];
+  return items.reduce((closest, el) => {
+    const box    = el.getBoundingClientRect();
+    const offset = clientY - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, el };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).el;
+}
+
+function showDropIndicator(list, afterEl) {
+  removeDropIndicator();
+  dropEl = document.createElement('li');
+  dropEl.className = 'drop-ind';
+  if (afterEl) list.insertBefore(dropEl, afterEl);
+  else         list.appendChild(dropEl);
+}
+
+function removeDropIndicator() {
+  if (dropEl) { dropEl.remove(); dropEl = null; }
+}
+
+function setupDragTarget(list, sec) {
+  list.addEventListener('dragover', (e) => {
+    if (!dragId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    showDropIndicator(list, getDragAfterEl(list, e.clientY) || null);
+  });
+
+  list.addEventListener('dragleave', (e) => {
+    if (!list.contains(e.relatedTarget)) removeDropIndicator();
+  });
+
+  list.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (!dragId) return;
+
+    // determine insert position from indicator's next sibling
+    const nextSib = dropEl ? dropEl.nextElementSibling : null;
+    const afterId = (nextSib && nextSib.dataset.id) ? nextSib.dataset.id : null;
+    removeDropIndicator();
+
+    const srcIdx = S.tasks[dragSec].findIndex(t => t.id === dragId);
+    if (srcIdx < 0) return;
+
+    const task = { ...S.tasks[dragSec][srcIdx], section: sec };
+
+    // remove from source
+    S.tasks[dragSec].splice(srcIdx, 1);
+
+    // find insert index in target (after removal, so indices are correct)
+    let targetIdx = S.tasks[sec].length;
+    if (afterId) {
+      const found = S.tasks[sec].findIndex(t => t.id === afterId);
+      if (found >= 0) targetIdx = found;
+    }
+    S.tasks[sec].splice(targetIdx, 0, task);
+    save();
+
+    // re-render affected sections
+    const toRender = dragSec === sec ? [sec] : [dragSec, sec];
+    toRender.forEach(id => {
+      const lst = document.getElementById(`lst-${id}`);
+      lst.innerHTML = '';
+      S.tasks[id].forEach(t => lst.appendChild(mkTaskEl(t, id, false)));
+    });
+
+    refresh();
+    dragId = dragSec = null;
+  });
+}
+
+/* ════════════════════════════════════════════════════════
+   REFRESH — counts + empty states
+════════════════════════════════════════════════════════ */
+
+function refresh() {
+  let total = 0;
+  SECTIONS.forEach(({ id }) => {
+    const n = S.tasks[id].length;
+    total += n;
+    document.getElementById(`cnt-${id}`).textContent = n;
+    const lst = document.getElementById(`lst-${id}`);
+    let emp = lst.querySelector('.col-empty');
+    if (n === 0) {
+      if (!emp) {
+        emp = document.createElement('li');
+        emp.className = 'col-empty';
+        emp.textContent = 'No tasks';
+        lst.appendChild(emp);
+      }
+    } else if (emp) emp.remove();
+  });
+
+  document.getElementById('total-open').textContent = total;
+  document.getElementById('cnt-done').textContent   = S.done.length;
+
+  if (doneOpen) {
+    const dLst = document.getElementById('lst-done');
+    const dEmp = dLst.querySelector('.done-empty');
+    if (S.done.length === 0) {
+      if (!dEmp) {
+        const e = document.createElement('li');
+        e.className = 'done-empty';
+        e.textContent = 'Nothing completed yet.';
+        dLst.appendChild(e);
+      }
+    } else if (dEmp) dEmp.remove();
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════ */
+
+function init() {
+  migrateStorage(); // must run before load() so primary key is present if recoverable
+  load();
+
+  // filter bar — tag pills from config
+  const fb = document.getElementById('filter-bar');
+  TAGS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'fp tag-p';
+    btn.dataset.tag = t.id;
+    btn.style.setProperty('--tc', t.color);
+    btn.textContent = t.label;
+    btn.onclick = () => applyFilter(activeFilter === t.id ? '' : t.id);
+    fb.appendChild(btn);
+  });
+  fb.querySelector('.all').onclick = () => applyFilter('');
+
+  // render tasks + set up drag targets
+  SECTIONS.forEach(({ id }) => {
+    const lst = document.getElementById(`lst-${id}`);
+    S.tasks[id].forEach(t => lst.appendChild(mkTaskEl(t, id, false)));
+    setupDragTarget(lst, id);
+  });
+
+  refresh();
+
+  // add-task inputs
+  document.querySelectorAll('.add-inp').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { addTask(inp.value, inp.dataset.sec); inp.value = ''; }
+    });
+  });
+
+  // done toggle (only on the row itself, not on child buttons)
+  document.getElementById('done-toggle').addEventListener('click', (e) => {
+    if (e.target.closest('button') && e.target.closest('button') !== e.currentTarget) return;
+    if (e.target.tagName === 'BUTTON') return;
+    toggleDone();
+  });
+
+  // done buttons
+  document.getElementById('btn-exp').addEventListener('click', (e) => {
+    e.stopPropagation();
+    exportMarkdown();
+  });
+  document.getElementById('btn-clr').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!S.done.length) return;
+    const msg = `Clear ${S.done.length} completed task${S.done.length !== 1 ? 's' : ''}?`;
+    if (confirm(msg)) {
+      S.done = [];
+      save();
+      if (doneOpen) renderDoneList();
+      refresh();
+    }
+  });
+
+  // modal
+  document.getElementById('mo-save').onclick = saveModal;
+  document.getElementById('mo-del').onclick  = deleteFromModal;
+  document.getElementById('mo-close').onclick = closeModal;
+  document.getElementById('mo').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('mo')) closeModal();
+  });
+
+  // keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const moHidden = document.getElementById('mo').classList.contains('hidden');
+    if (e.key === 'Escape' && !moHidden) { closeModal(); return; }
+    if (!moHidden && (e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'Enter')) {
+      e.preventDefault();
+      saveModal();
+    }
+  });
+
+  // date header
+  document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+init();
+</script>
+</body>
+</html>

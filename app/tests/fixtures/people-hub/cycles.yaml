@@ -1,0 +1,36 @@
+active_cycle: 2026-deep-dive
+
+cycles:
+  2026-deep-dive:
+    name: "Deep Dive 2026"
+    type: deep-dive
+    events:
+      - id: self-assessment
+        label: "Self Assessment"
+        start: "2026-04-09"
+        end: "2026-04-24"
+      - id: manager-review
+        label: "Manager Review"
+        start: "2026-04-15"
+        end: "2026-05-08"
+      - id: calibration
+        label: "Calibration Sessions"
+        start: "2026-05-04"
+        end: "2026-05-22"
+      - id: performance-conversations
+        label: "Performance Conversations"
+        start: "2026-06-01"
+        end: "2026-06-19"
+      - id: salary-promotions
+        label: "Salary + Promotions"
+        start: "2026-07-03"
+        end: "2026-07-17"
+
+  2026-light-touch:
+    name: "Light Touch Q3 2026"
+    type: light-touch
+    events:
+      - id: manager-conversation
+        label: "Manager Conversation"
+        start: "2026-10-01"
+        end: "2026-10-31"

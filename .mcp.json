@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "Atlassian Goals": {
+      "command": "python3",
+      "args": ["connectors/atlassian-goals/server.py"]
+    }
+  }
+}

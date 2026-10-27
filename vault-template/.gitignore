@@ -1,0 +1,16 @@
+# A vault holds your data. Keep credentials and regenerated runtime files out of git.
+.env
+credentials.json
+*service-account*.json
+*-key.json
+token.json
+.ozos/runs/
+.ozos/knowledge-tag-index.json
+.ozos/knowledge-stars.json
+.ozos/knowledge-opens.json
+.ozos/granola-processed.json
+.ozos/personal-tasks.json
+*.db
+*.db-wal
+*.db-shm
+.DS_Store

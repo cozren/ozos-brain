@@ -1,0 +1,6 @@
+{
+  "name": "app",
+  "description": "Local web app (OZOS command center) — FastAPI backend + React/Vite frontend",
+  "output_dir": null,
+  "output_glob": null
+}

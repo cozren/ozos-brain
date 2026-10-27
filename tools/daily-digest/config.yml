@@ -1,0 +1,33 @@
+youtube:
+  channels:
+    - name: Chase AI
+      url: https://www.youtube.com/@Chase-H-AI
+    - name: Brock Mesarich
+      url: https://www.youtube.com/@BrockMesarich
+    - name: Nate Herk
+      url: https://www.youtube.com/@nateherk
+    - name: Jack Roberts
+      url: https://www.youtube.com/@JackRobertsAI
+    - name: AI Revolution
+      url: https://www.youtube.com/@airevolution
+    - name: Ray Fu
+      url: https://www.youtube.com/@raycfu
+    - name: Aakash Gupta
+      url: https://www.youtube.com/@growproduct
+  lookback_hours: 48
+
+news:
+  rss_feeds:
+    - url: https://hnrss.org/frontpage
+      name: Hacker News
+    - url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+      name: The Verge AI
+    - url: https://simonwillison.net/atom/everything/
+      name: Simon Willison
+  lookback_hours: 24
+  max_items: 5
+
+github:
+  filters: [ai, llm, machine-learning, automation, agents]
+  trending_count: 5
+  popular_count: 10

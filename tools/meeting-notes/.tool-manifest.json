@@ -1,0 +1,6 @@
+{
+  "name": "meeting-notes",
+  "description": "Syncs Gemini meeting notes from Gmail to local markdown",
+  "output_dir": "../../vault/knowledge-hub/meeting-notes",
+  "output_glob": "**/*.md"
+}

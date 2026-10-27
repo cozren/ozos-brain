@@ -1,0 +1,6 @@
+{
+  "name": "atlassian-goals-mcp",
+  "description": "FastMCP server for Atlassian Goals API",
+  "output_dir": null,
+  "output_glob": null
+}

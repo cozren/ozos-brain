@@ -1,0 +1,6 @@
+{
+  "name": "chatgpt-import",
+  "description": "Converts ChatGPT data export JSON files to Markdown conversation files",
+  "output_dir": null,
+  "output_glob": null
+}

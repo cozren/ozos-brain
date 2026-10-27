@@ -1,0 +1,32 @@
+# Performance review cycles.
+#
+# If your company runs a review cycle, replace the example below with its real
+# stages and dates (Setup → Review cycle does this for you). If it does not, the
+# recommended default is a monthly 1:1 note check and a quarterly written
+# reflection per report; Setup turns that into reminders on the home page.
+active_cycle: example-annual
+cycles:
+  example-annual:
+    name: Annual Review (example)
+    type: deep-dive
+    events:
+    - id: self-assessment
+      label: Self Assessment
+      start: ''
+      end: ''
+    - id: manager-review
+      label: Manager Review
+      start: ''
+      end: ''
+    - id: calibration
+      label: Calibration Sessions
+      start: ''
+      end: ''
+    - id: performance-conversations
+      label: Performance Conversations
+      start: ''
+      end: ''
+    - id: salary-promotions
+      label: Salary + Promotions
+      start: ''
+      end: ''

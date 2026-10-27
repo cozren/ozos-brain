@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent: run the OZOS daily digest every day at 10:00 local time.
+
+  Reference copy kept in the repo. The LIVE copy must be installed at
+  ~/Library/LaunchAgents/com.ozos.daily-digest.plist and loaded with:
+      launchctl load ~/Library/LaunchAgents/com.ozos.daily-digest.plist
+  See README.md → "Scheduling (launchd)".
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ozos.daily-digest</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/daily-digest/run-digest.sh</string>
+    </array>
+
+    <!-- Hour + Minute only (no Day/Weekday) => fires every day at 10:00 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>10</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- launchd-level stdout/stderr (the wrapper also logs to digest.log) -->
+    <key>StandardOutPath</key>
+    <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/daily-digest/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/daily-digest/launchd.err.log</string>
+
+    <!-- Don't run the moment it's loaded; wait for the scheduled time -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

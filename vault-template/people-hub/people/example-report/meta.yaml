@@ -1,0 +1,9 @@
+# One folder per person you manage or work closely with. The folder name is the
+# person id used across OZOS (lowercase, no spaces). Delete this example once you
+# have added a real person (People Hub → Add person, or Setup → People).
+name: example-report            # must equal the folder name
+display_name: "Example Report"  # how the name is shown
+role: "Product Manager"         # their title
+start_date: "2026-01-01"        # YYYY-MM-DD
+location: "Remote"              # city or timezone
+manager: ""                     # your name, or who they report to

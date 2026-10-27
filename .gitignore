@@ -1,0 +1,34 @@
+.env
+credentials.json
+.obsidian/
+.DS_Store
+**/.DS_Store
+.worktrees/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+node_modules/
+**/node_modules/
+.superpowers/
+
+# daily-digest scheduled-run logs (local runtime output)
+tools/daily-digest/digest.log
+tools/daily-digest/launchd.out.log
+tools/daily-digest/launchd.err.log
+
+*service-account*.json
+ozos-mcp-*.json
+
+# intel-agents run logs
+tools/intel-agents/*.log
+
+
+# Vault (your data) and derived knowledge graph live beside the engine, never in it
+/vault/
+/graphify-out/
+/.ozos/
+*.db
+*.db-wal
+*.db-shm

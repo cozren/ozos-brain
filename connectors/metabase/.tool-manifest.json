@@ -1,0 +1,6 @@
+{
+  "name": "metabase",
+  "description": "Direct read-only Metabase REST client; fetches a single dashboard's cards and result rows",
+  "output_dir": null,
+  "output_glob": null
+}

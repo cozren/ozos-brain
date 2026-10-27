@@ -1,0 +1,6 @@
+{
+  "name": "intel-agents",
+  "description": "Topic-driven intelligence agents: run each agent's searches + house-style prompt, write a dated LinkedIn/research report instance",
+  "output_dir": "../../vault/knowledge-hub/intel-agents",
+  "output_glob": "**/*.json"
+}

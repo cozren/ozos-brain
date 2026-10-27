@@ -1,0 +1,34 @@
+manager_rating: null
+promotion_nominated: false
+promotion_justification: ""
+key_goals: []
+competencies:
+  self:
+    business-operational-knowledge: null
+    data-knowledge: null
+    industry-domain-knowledge: null
+    strategy-definition: null
+    user-knowledge: null
+    delivery: null
+    discovery: null
+    driving-impact: null
+    optimization: null
+    collaboration: null
+    leadership-evangelism: null
+    stakeholder-management: null
+    overall: null
+  manager:
+    business-operational-knowledge: null
+    data-knowledge: null
+    industry-domain-knowledge: null
+    strategy-definition: null
+    user-knowledge: null
+    delivery: null
+    discovery: null
+    driving-impact: null
+    optimization: null
+    collaboration: null
+    leadership-evangelism: null
+    stakeholder-management: null
+    overall: null
+documents: []

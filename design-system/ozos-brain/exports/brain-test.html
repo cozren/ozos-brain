@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Brain Wireframe — Step 2: Mouse Parallax</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000000; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Layer A: Pure #000000 ──────────────────────────────────────────────────
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  var W = window.innerWidth, H = window.innerHeight;
+  var camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 50);
+  // Lateral 3/4 view: camera is to the right-front and slightly above
+  // In our coords: phi=π/2 is the right side (+Z), so camera at high Z + slight X
+  camera.position.set(0.8, 0.4, 4.5);
+  camera.lookAt(0, 0.1, 0);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  document.body.appendChild(renderer.domElement);
+
+  // ── Brain surface radial function ─────────────────────────────────────────
+  // Coordinate system (right-hand):
+  //   Y  = up (theta=0 → crown)
+  //   +X = frontal lobe  (phi=0)
+  //   -X = occipital lobe (phi=π)
+  //   +Z = right hemisphere (phi=π/2)  ← camera looks from here
+  function brainR(theta, phi) {
+    var cosT = Math.cos(theta);
+    var sinT = Math.sin(theta);
+    var cosP = Math.cos(phi);
+    var sinP = Math.sin(phi);
+
+    // 1. Base ellipsoid — REAL brain proportions
+    //    front-back (X) >> height (Y) > left-right (Z at camera side)
+    var ax = 1.52,   // front-back: longest axis
+        ay = 1.00,   // height
+        az = 0.88;   // left-right: narrower than front-back
+    var ex = (sinT * cosP) / ax;
+    var ey = cosT / ay;
+    var ez = (sinT * sinP) / az;
+    var r = 1.0 / Math.sqrt(ex * ex + ey * ey + ez * ez);
+
+    // 2. Strong inferior flattening (base of brain is flat)
+    if (cosT < 0) r *= (1.0 + 0.42 * cosT);
+
+    // 3. Frontal lobe — slight anterior-superior bulge
+    r += 0.07 * Math.max(0, cosP) * sinT * (1.0 - theta / Math.PI);
+
+    // 4. Occipital prominence — rounded posterior pole
+    r += 0.06 * Math.max(0, -cosP) * Math.pow(sinT, 0.8);
+
+    // 5. Parietal elevation — the dome is highest in the parietal region
+    //    (near the crown, slightly toward the back: theta~0.25π)
+    r += 0.05 * Math.exp(-7.0 * Math.pow(theta - 0.25 * Math.PI, 2));
+
+    // 6. Temporal lobe protrusion (both sides, lower-lateral)
+    //    phi near ±π/3 (front-side), theta ~0.58–0.72π
+    var dTempA = phi - Math.PI / 3.5;
+    var dTempB = phi - (2 * Math.PI - Math.PI / 3.5);
+    var dTempTheta = theta - 0.64 * Math.PI;
+    r += 0.045 * (Math.exp(-5 * dTempA * dTempA) + Math.exp(-5 * dTempB * dTempB))
+                * Math.exp(-10 * dTempTheta * dTempTheta);
+
+    // 7. Sylvian fissure — lateral indentation (both hemispheres)
+    var dSylvT = theta - 0.56 * Math.PI;
+    r -= 0.13 * Math.exp(-9 * dSylvT * dSylvT) * sinP * sinP;
+
+    // 8. Gyri — multi-frequency organic surface perturbation
+    //    Higher amplitude than before so bumps are visible
+    r += 0.080 * Math.sin(4.6  * theta + 1.7 ) * Math.cos(3.9  * phi + 0.8);
+    r += 0.055 * Math.sin(7.4  * theta - 1.1 ) * Math.cos(6.7  * phi + 2.5);
+    r += 0.038 * Math.sin(10.8 * theta + 2.0 ) * Math.cos(3.2  * phi - 1.2);
+    r += 0.025 * Math.sin(3.2  * theta + 4.8 ) * Math.cos(10.5 * phi + 0.4);
+    r += 0.015 * Math.sin(14.0 * theta - 0.7 ) * Math.cos(5.1  * phi + 3.6);
+    r += 0.010 * Math.sin(6.5  * theta + 3.1 ) * Math.cos(8.3  * phi - 0.9);
+
+    return r;
+  }
+
+  // ── Sample points on brain surface ────────────────────────────────────────
+  function sampleSurface(target) {
+    var pts = [];
+    var MIN_D = 0.110;
+    var MAX_ATTEMPTS = target * 30;
+
+    for (var n = 0; n < MAX_ATTEMPTS && pts.length < target; n++) {
+      var theta = Math.acos(2 * Math.random() - 1);
+      var phi   = Math.random() * Math.PI * 2;
+
+      if (theta > Math.PI * 0.81) continue;   // exclude base / brainstem
+
+      var r  = brainR(theta, phi);
+      var st = Math.sin(theta);
+      var p  = new THREE.Vector3(
+        r * st * Math.cos(phi),
+        r * Math.cos(theta),
+        r * st * Math.sin(phi)
+      );
+
+      var ok = true;
+      for (var i = 0; i < pts.length; i++) {
+        if (p.distanceTo(pts[i]) < MIN_D) { ok = false; break; }
+      }
+      if (ok) pts.push(p);
+    }
+    return pts;
+  }
+
+  // ── Build Obsidian-style k-nearest-neighbour graph ─────────────────────────
+  function buildGraph(pts) {
+    var SHORT = 0.32,   LONG = 0.68;
+    var K_S   = 5,      K_L  = 2;
+    var shortEdges = [], longEdges = [];
+    var seen = {};
+
+    for (var i = 0; i < pts.length; i++) {
+      var nbrs = [];
+      for (var j = 0; j < pts.length; j++) {
+        if (i === j) continue;
+        var d = pts[i].distanceTo(pts[j]);
+        if (d < LONG) nbrs.push({ j: j, d: d });
+      }
+      nbrs.sort(function (a, b) { return a.d - b.d; });
+
+      var ks = 0, kl = 0;
+      for (var k = 0; k < nbrs.length; k++) {
+        var nb  = nbrs[k];
+        var key = i < nb.j ? (i + ',' + nb.j) : (nb.j + ',' + i);
+        if (seen[key]) continue;
+
+        if (nb.d <= SHORT && ks < K_S) {
+          shortEdges.push({ a: i, b: nb.j, d: nb.d });
+          seen[key] = true;
+          ks++;
+        } else if (nb.d <= LONG && kl < K_L) {
+          longEdges.push({ a: i, b: nb.j, d: nb.d });
+          seen[key] = true;
+          kl++;
+        }
+      }
+    }
+    return { shortEdges: shortEdges, longEdges: longEdges };
+  }
+
+  // ── Build Three.js LineSegments ────────────────────────────────────────────
+  function makeLines(pts, edges, color, opacity) {
+    var pos = new Float32Array(edges.length * 6);
+    for (var i = 0; i < edges.length; i++) {
+      var A = pts[edges[i].a], B = pts[edges[i].b];
+      pos[i * 6 + 0] = A.x; pos[i * 6 + 1] = A.y; pos[i * 6 + 2] = A.z;
+      pos[i * 6 + 3] = B.x; pos[i * 6 + 4] = B.y; pos[i * 6 + 5] = B.z;
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    var mat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: opacity });
+    return new THREE.LineSegments(geo, mat);
+  }
+
+  // ── Assemble into a Group so we can rotate everything together ────────────
+  var brainGroup = new THREE.Group();
+
+  var points = sampleSurface(500);
+  var graph  = buildGraph(points);
+
+  brainGroup.add(makeLines(points, graph.shortEdges, 0x00e5ff, 0.65));
+  brainGroup.add(makeLines(points, graph.longEdges,  0x00e5ff, 0.22));
+  scene.add(brainGroup);
+
+  console.log(
+    'Brain: ' + points.length + ' nodes | ' +
+    graph.shortEdges.length + ' short | ' +
+    graph.longEdges.length + ' long'
+  );
+
+  // Expose for Step 3 particle system
+  window.BRAIN_GRAPH = {
+    points     : points,
+    shortEdges : graph.shortEdges,
+    longEdges  : graph.longEdges
+  };
+
+  // ── Mouse parallax ─────────────────────────────────────────────────────────
+  // Rotation ranges map the two reference image angles:
+  //   Mouse left  → more lateral profile   (Image 0, rotY = -0.30)
+  //   Mouse right → rotated showing depth  (Image 4, rotY = +0.30)
+  //   Mouse up/down → subtle vertical tilt (±0.18 rad)
+  var MAX_ROT_Y = 0.30;   // radians
+  var MAX_ROT_X = 0.18;   // radians
+  var DAMPING   = 0.07;   // 0 = instant, lower = smoother/laggier
+
+  var targetY = 0, targetX = 0;
+  var currentY = 0, currentX = 0;
+
+  window.addEventListener('mousemove', function (e) {
+    // Normalise mouse to -1..1 (centre = 0)
+    var nx =  (e.clientX / window.innerWidth)  * 2 - 1;
+    var ny =  (e.clientY / window.innerHeight) * 2 - 1;
+
+    targetY =  nx * MAX_ROT_Y;
+    targetX =  ny * MAX_ROT_X;   // mouse up → tilt front of brain upward
+  });
+
+  // Return to neutral when cursor leaves the window
+  window.addEventListener('mouseleave', function () {
+    targetY = 0;
+    targetX = 0;
+  });
+
+  // ── Render loop ────────────────────────────────────────────────────────────
+  (function loop() {
+    requestAnimationFrame(loop);
+
+    // Exponential lerp — creates silky ease-out feel
+    currentY += (targetY - currentY) * DAMPING;
+    currentX += (targetX - currentX) * DAMPING;
+
+    brainGroup.rotation.y = currentY;
+    brainGroup.rotation.x = currentX;
+
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+})();
+</script>
+</body>
+</html>

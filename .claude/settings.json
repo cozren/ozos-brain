@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && python3 tools/meeting-notes/sync_gemini_notes.py 2>&1 | tail -30; mkdir -p graphify-out; if command -v graphify >/dev/null && graphify update . > graphify-out/last-update.log 2>&1; then echo '[graphify] code graph updated'; else echo '[graphify] UPDATE FAILED - see graphify-out/last-update.log'; fi; W=$(stat -f %m graphify-out/wiki/index.md 2>/dev/null || echo 0); G=$(stat -f %m graphify-out/graph.json 2>/dev/null || echo 0); if [ $((G - W)) -gt 604800 ]; then echo '[graphify] WARNING: wiki is >7 days older than graph.json - run /graphify . --update --wiki --no-viz to refresh'; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f graphify-out/graph.json ] && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"graphify: Knowledge graph exists. For architecture/feature work, consult graphify-out/wiki/index.md and GRAPH_REPORT.md (god nodes + community structure) before exploring raw files.\"}}' || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/tools/test-pipeline/hooks/post-edit-tests.sh\"",
+            "statusMessage": "Running affected tool's tests…"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "brag@brag": true
+  }
+}

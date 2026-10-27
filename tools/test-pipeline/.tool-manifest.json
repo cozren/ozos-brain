@@ -1,0 +1,6 @@
+{
+  "name": "test-pipeline",
+  "description": "Runs every tool's test suite in isolation and renders a pass/fail status board (terminal + HTML)",
+  "output_dir": null,
+  "output_glob": null
+}

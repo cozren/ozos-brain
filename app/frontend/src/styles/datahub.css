@@ -1,0 +1,154 @@
+/* Data Hub dashboard tiles + canvas. Matches the app's dark/neon idiom. */
+.datahub-tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid rgba(0, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.6);
+  overflow: hidden;
+}
+.datahub-tile__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Left inset clears the loadout drag grip overlaying this corner. */
+  padding: 6px 10px 6px 30px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+.datahub-tile__body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.datahub-tile__body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.datahub-tile__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+}
+.datahub-tile__picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.datahub-tile__picker-group + .datahub-tile__picker-group {
+  margin-top: 12px;
+}
+.datahub-tile__picker-heading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  padding: 0 4px 2px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+.datahub-tile__picker-item {
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.datahub-tile__picker-item:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+.datahub-tile__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.datahub-tile__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.datahub-tile__btn:hover {
+  color: var(--neon-cyan);
+}
+
+.datahub-canvas {
+  padding: 8px 40px 40px;
+}
+.datahub-canvas__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  padding: 8px 0 14px;
+}
+.datahub-canvas__menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(8, 12, 20, 0.97);
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 8px;
+}
+.datahub-canvas__menu button {
+  padding: 8px 16px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.datahub-canvas__menu button:hover {
+  color: var(--neon-cyan);
+  background: rgba(0, 255, 255, 0.08);
+}
+.datahub-canvas__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: rgba(0, 255, 255, 0.06);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.datahub-canvas__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.datahub-canvas__hint--error {
+  color: #f87171;
+  font-weight: 600;
+}

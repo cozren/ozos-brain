@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd agent: run every enabled Intel Agent daily at 07:00 local time.
+
+  Reference copy kept in the repo. The LIVE copy must be installed at
+  ~/Library/LaunchAgents/com.ozos.intel-agents.plist and loaded with:
+      launchctl load ~/Library/LaunchAgents/com.ozos.intel-agents.plist
+  See README.md → "Scheduling (launchd)".
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ozos.intel-agents</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/intel-agents/run-all.sh</string>
+    </array>
+
+    <!-- launchd runs with a minimal environment: give run.py an explicit path to
+         the Claude Code CLI and a PATH that includes node + the user bin dir. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BIN</key>
+        <string>/ABSOLUTE/PATH/TO/.local/bin/claude</string>
+        <key>PATH</key>
+        <string>/ABSOLUTE/PATH/TO/.local/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- Hour + Minute only (no Day/Weekday) => fires every day at 07:00 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- launchd-level stdout/stderr (the wrapper also logs to intel-agents.log) -->
+    <key>StandardOutPath</key>
+    <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/intel-agents/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/ABSOLUTE/PATH/TO/ozos-brain/tools/intel-agents/launchd.err.log</string>
+
+    <!-- Don't run the moment it's loaded; wait for the scheduled time -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

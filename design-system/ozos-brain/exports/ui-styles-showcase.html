@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI/UX Styles Showcase</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: #fff; margin: 0; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(20px);
+    background: rgba(15,15,15,0.85);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 14px 32px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  nav h1 { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
+  nav span { font-size: 12px; color: #666; }
+  .badge { background: #6366f1; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+
+  /* ─── GRID ─── */
+  .grid-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .style-card {
+    position: relative;
+    min-height: 340px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+  }
+  .style-card:hover { transform: scale(1.01); z-index: 2; }
+  .style-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 20px 20px 18px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+    z-index: 10;
+  }
+  .style-label h3 { font-size: 14px; font-weight: 600; margin: 0 0 3px; }
+  .style-label p { font-size: 11px; color: rgba(255,255,255,0.6); margin: 0; }
+
+  /* ─── 1. GLASSMORPHISM ─── */
+  .glass-demo {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%; max-width: 280px;
+    color: #fff;
+  }
+  .glass-card .g-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#fff3,#fff1); border: 2px solid rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .glass-card h4 { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+  .glass-card p { font-size: 12px; opacity: 0.75; margin: 0 0 18px; }
+  .glass-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 10px; padding: 9px 16px; font-size: 12px; font-weight: 600; display: inline-block; margin-right: 8px; }
+  .glass-stat { display: flex; gap: 16px; margin-top: 18px; }
+  .glass-stat div { flex: 1; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; text-align: center; }
+  .glass-stat div .num { font-size: 18px; font-weight: 700; }
+  .glass-stat div .lbl { font-size: 10px; opacity: 0.6; }
+
+  /* ─── 2. DARK MODE OLED ─── */
+  .dark-demo {
+    background: #000;
+    display: flex; align-items: center; justify-content: center; padding: 32px;
+  }
+  .dark-card { width: 100%; max-width: 300px; }
+  .dark-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .dark-header .brand { font-size: 13px; font-weight: 700; color: #00ff88; letter-spacing: 0.05em; }
+  .dark-bar { height: 1px; background: #1a1a1a; margin: 12px 0; }
+  .dark-metric { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+  .dark-metric .label { font-size: 12px; color: #666; }
+  .dark-metric .value { font-size: 14px; font-weight: 600; color: #fff; }
+  .dark-metric .value.green { color: #00ff88; }
+  .dark-metric .value.blue { color: #00bfff; }
+  .dark-chart { margin-top: 16px; display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+  .dark-bar-item { flex: 1; background: #1a1a1a; border-radius: 4px 4px 0 0; position: relative; }
+  .dark-bar-item .fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 4px 4px 0 0; }
+
+  /* ─── 3. CYBERPUNK ─── */
+  .cyber-demo {
+    background: #0d0d0d;
+    display: flex; align-items: center; justify-content: center; padding: 32px;
+    position: relative; overflow: hidden;
+  }
+  .cyber-demo::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.015) 2px, rgba(0,255,0,0.015) 4px);
+    pointer-events: none;
+  }
+  .cyber-card { width: 100%; max-width: 300px; font-family: 'Space Mono', monospace; }
+  .cyber-title { font-size: 10px; color: #00ff00; letter-spacing: 0.2em; text-shadow: 0 0 10px #00ff00; margin-bottom: 6px; }
+  .cyber-heading { font-size: 22px; font-weight: 700; color: #fff; margin: 0 0 16px; line-height: 1.2; }
+  .cyber-heading span { color: #ff00ff; text-shadow: 0 0 15px #ff00ff; }
+  .cyber-line { height: 1px; background: linear-gradient(90deg, #00ff00, transparent); margin: 12px 0; }
+  .cyber-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 11px; color: #aaa; }
+  .cyber-dot { width: 6px; height: 6px; border-radius: 50%; background: #00ffff; box-shadow: 0 0 8px #00ffff; flex-shrink: 0; }
+  .cyber-dot.pink { background: #ff00ff; box-shadow: 0 0 8px #ff00ff; }
+  .cyber-btn { margin-top: 16px; border: 1px solid #00ff00; color: #00ff00; text-shadow: 0 0 8px #00ff00; font-size: 11px; letter-spacing: 0.15em; padding: 10px 18px; display: inline-block; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); cursor: pointer; }
+
+  /* ─── 4. NEUMORPHISM ─── */
+  .neu-demo {
+    background: #e8ecf1;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .neu-card {
+    background: #e8ecf1;
+    border-radius: 24px;
+    box-shadow: 12px 12px 24px #c5c9d1, -12px -12px 24px #ffffff;
+    padding: 28px; width: 100%; max-width: 280px;
+  }
+  .neu-title { font-size: 11px; font-weight: 600; color: #9aa5b4; letter-spacing: 0.1em; margin-bottom: 16px; }
+  .neu-big { font-size: 36px; font-weight: 300; color: #3d4d60; margin-bottom: 4px; }
+  .neu-sub { font-size: 12px; color: #7a8a9a; margin-bottom: 24px; }
+  .neu-btn {
+    background: #e8ecf1;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 6px 6px 12px #c5c9d1, -6px -6px 12px #ffffff;
+    padding: 12px 24px;
+    font-size: 13px; font-weight: 600; color: #5a7ab5;
+    cursor: pointer; display: block; width: 100%; text-align: center;
+    margin-bottom: 12px;
+  }
+  .neu-ring {
+    width: 80px; height: 80px; border-radius: 50%;
+    box-shadow: 8px 8px 16px #c5c9d1, -8px -8px 16px #ffffff;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #5a7ab5;
+  }
+
+  /* ─── 5. BRUTAL ─── */
+  .brutal-demo {
+    background: #f5f0e8;
+    display: flex; align-items: center; justify-content: center; padding: 36px;
+  }
+  .brutal-card { width: 100%; max-width: 290px; }
+  .brutal-tag { background: #ff3c00; color: #fff; font-size: 10px; font-weight: 900; letter-spacing: 0.15em; padding: 4px 10px; display: inline-block; margin-bottom: 12px; }
+  .brutal-h { font-size: 32px; font-weight: 900; color: #0a0a0a; line-height: 1; margin: 0 0 12px; letter-spacing: -0.03em; text-transform: uppercase; }
+  .brutal-p { font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.5; }
+  .brutal-btn { background: #0a0a0a; color: #f5f0e8; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; padding: 14px 24px; border: 3px solid #0a0a0a; display: inline-block; text-transform: uppercase; box-shadow: 4px 4px 0 #ff3c00; cursor: pointer; }
+  .brutal-box { border: 3px solid #0a0a0a; padding: 14px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .brutal-num { font-size: 28px; font-weight: 900; }
+  .brutal-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #666; }
+
+  /* ─── 6. AI-NATIVE ─── */
+  .ai-demo {
+    background: #f8f9ff;
+    display: flex; align-items: flex-end; justify-content: center; padding: 32px;
+  }
+  .ai-chat { width: 100%; max-width: 300px; }
+  .ai-msg { margin-bottom: 10px; }
+  .ai-bubble { display: inline-block; border-radius: 18px; padding: 10px 14px; font-size: 12px; line-height: 1.5; max-width: 85%; }
+  .ai-bubble.bot { background: #fff; border: 1px solid #e8e8f0; color: #1a1a2e; border-radius: 4px 18px 18px 18px; box-shadow: 0 2px 8px rgba(99,102,241,0.06); }
+  .ai-bubble.user { background: #6366f1; color: #fff; border-radius: 18px 4px 18px 18px; margin-left: auto; display: block; }
+  .ai-name { font-size: 10px; color: #9096a8; margin-bottom: 4px; font-weight: 600; }
+  .ai-typing { display: flex; gap: 4px; align-items: center; padding: 10px 14px; background: #fff; border: 1px solid #e8e8f0; border-radius: 4px 18px 18px 18px; width: fit-content; }
+  .dot-pulse { width: 6px; height: 6px; border-radius: 50%; background: #9096a8; animation: pulse 1.2s infinite; }
+  .dot-pulse:nth-child(2) { animation-delay: 0.2s; }
+  .dot-pulse:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  .ai-input { margin-top: 14px; display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #dde1f0; border-radius: 24px; padding: 8px 12px; }
+  .ai-input .placeholder { font-size: 12px; color: #aab; flex: 1; }
+  .ai-send { width: 28px; height: 28px; background: #6366f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ─── 7. SWISS MODERNISM ─── */
+  .swiss-demo {
+    background: #fff;
+    display: flex; align-items: center; justify-content: center; padding: 36px;
+  }
+  .swiss-card { width: 100%; max-width: 300px; font-family: 'Inter', sans-serif; }
+  .swiss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid #000; }
+  .swiss-cell { padding: 16px; border-right: 1px solid #000; border-bottom: 1px solid #000; }
+  .swiss-cell:nth-child(2n) { border-right: none; }
+  .swiss-cell:nth-child(3), .swiss-cell:nth-child(4) { border-bottom: none; }
+  .swiss-num { font-size: 32px; font-weight: 700; line-height: 1; color: #000; }
+  .swiss-label { font-size: 10px; font-weight: 500; color: #666; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 4px; }
+  .swiss-accent { background: #ff3c00; }
+  .swiss-accent .swiss-num, .swiss-accent .swiss-label { color: #fff; }
+  .swiss-title { font-size: 22px; font-weight: 700; letter-spacing: -0.04em; margin-bottom: 14px; border-bottom: 3px solid #000; padding-bottom: 12px; }
+  .swiss-sub { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; font-weight: 500; }
+
+  /* ─── 8. LIQUID GLASS (Apple) ─── */
+  .liquid-demo {
+    background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+    background-size: 400% 400%;
+    animation: gradShift 6s ease infinite;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+  .liquid-card {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(40px) saturate(180%);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 28px;
+    padding: 28px; width: 100%; max-width: 280px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .liquid-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
+  .liquid-h { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+  .liquid-p { font-size: 12px; color: rgba(255,255,255,0.75); margin: 0 0 20px; }
+  .liquid-pill { background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4); border-radius: 100px; padding: 9px 18px; font-size: 12px; font-weight: 600; color: #fff; display: inline-block; backdrop-filter: blur(10px); }
+  .liquid-row { display: flex; gap: 8px; margin-top: 16px; }
+  .liquid-tag { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 10px; font-size: 10px; color: rgba(255,255,255,0.85); }
+
+  /* ─── 9. EXAGGERATED MINIMALISM ─── */
+  .exmin-demo {
+    background: #fff;
+    display: flex; align-items: center; justify-content: center; padding: 36px;
+    font-family: 'Inter', sans-serif;
+  }
+  .exmin-card { width: 100%; max-width: 300px; }
+  .exmin-kicker { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: #ff3c00; text-transform: uppercase; margin-bottom: 12px; }
+  .exmin-h { font-size: clamp(36px, 8vw, 56px); font-weight: 900; color: #000; line-height: 0.95; letter-spacing: -0.05em; margin: 0 0 20px; }
+  .exmin-divider { height: 3px; width: 40px; background: #000; margin-bottom: 16px; }
+  .exmin-p { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 24px; font-weight: 400; }
+  .exmin-link { font-size: 13px; font-weight: 700; color: #000; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 2px solid #ff3c00; padding-bottom: 2px; }
+
+  /* ─── 10. FLAT DESIGN ─── */
+  .flat-demo {
+    background: #f0f4f8;
+    display: flex; align-items: center; justify-content: center; padding: 36px;
+  }
+  .flat-card { width: 100%; max-width: 300px; }
+  .flat-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+  .flat-tab { flex: 1; padding: 10px; text-align: center; font-size: 11px; font-weight: 600; background: #dde3ea; color: #788; }
+  .flat-tab.active { background: #4a9eff; color: #fff; }
+  .flat-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .flat-block { flex: 1; padding: 14px; border-radius: 0; }
+  .flat-block .f-num { font-size: 22px; font-weight: 700; color: #fff; }
+  .flat-block .f-lbl { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .flat-list { background: #fff; padding: 8px 0; }
+  .flat-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; }
+  .flat-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .flat-item-label { font-size: 12px; color: #334; font-weight: 500; }
+
+  /* ─── 11. E-INK ─── */
+  .eink-demo {
+    background: #f5f1e8;
+    display: flex; align-items: center; justify-content: center; padding: 36px;
+  }
+  .eink-card { width: 100%; max-width: 300px; font-family: 'Playfair Display', Georgia, serif; }
+  .eink-date { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; color: #9a8f7a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #d4cfc4; padding-bottom: 10px; }
+  .eink-h { font-size: 22px; font-weight: 700; color: #1a1510; line-height: 1.2; margin: 0 0 10px; }
+  .eink-byline { font-family: 'Inter', sans-serif; font-size: 11px; color: #7a7060; margin-bottom: 12px; }
+  .eink-body { font-size: 13px; color: #2a241a; line-height: 1.7; margin-bottom: 14px; }
+  .eink-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .eink-tag { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #4a4030; border: 1px solid #b0a890; padding: 3px 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* ─── 12. EXECUTIVE DASHBOARD ─── */
+  .exec-demo {
+    background: #0f172a;
+    display: flex; align-items: center; justify-content: center; padding: 32px;
+  }
+  .exec-card { width: 100%; max-width: 300px; }
+  .exec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .exec-title { font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+  .exec-badge { background: #22c55e; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .exec-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .exec-kpi { background: #1e293b; border-radius: 10px; padding: 14px; }
+  .exec-kpi .k-val { font-size: 24px; font-weight: 700; color: #f1f5f9; margin-bottom: 2px; }
+  .exec-kpi .k-label { font-size: 10px; color: #64748b; }
+  .exec-kpi .k-trend { font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .exec-kpi .k-trend.up { color: #22c55e; }
+  .exec-kpi .k-trend.down { color: #ef4444; }
+  .exec-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .exec-bar-row .b-label { font-size: 11px; color: #94a3b8; width: 50px; flex-shrink: 0; }
+  .exec-bar-track { flex: 1; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+  .exec-bar-fill { height: 100%; border-radius: 3px; }
+  .exec-bar-row .b-val { font-size: 11px; color: #f1f5f9; font-weight: 600; width: 36px; text-align: right; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>UI/UX Styles Showcase</h1>
+  <span>—</span>
+  <span class="badge">12 styles</span>
+  <span style="color:#666;font-size:12px;margin-left:auto">Powered by ui-ux-pro-max skill</span>
+</nav>
+
+<div class="grid-main">
+
+  <!-- 1. GLASSMORPHISM -->
+  <div class="style-card glass-demo">
+    <div class="glass-card">
+      <div class="g-avatar"></div>
+      <h4>Revenue Overview</h4>
+      <p>Dashboard · Q2 2026</p>
+      <div>
+        <span class="glass-btn">Details</span>
+        <span class="glass-btn">Export</span>
+      </div>
+      <div class="glass-stat">
+        <div><div class="num">$84k</div><div class="lbl">Revenue</div></div>
+        <div><div class="num">2.4k</div><div class="lbl">Users</div></div>
+        <div><div class="num">98%</div><div class="lbl">Uptime</div></div>
+      </div>
+    </div>
+    <div class="style-label">
+      <h3>Glassmorphism</h3>
+      <p>Modern SaaS · financial dashboards · premium apps</p>
+    </div>
+  </div>
+
+  <!-- 2. DARK OLED -->
+  <div class="style-card dark-demo">
+    <div class="dark-card">
+      <div class="dark-header">
+        <span class="dark-brand">ANALYTICS</span>
+        <span style="font-size:11px;color:#444">Live</span>
+      </div>
+      <div class="dark-metric"><span class="label">Total Revenue</span><span class="value green">$248,900</span></div>
+      <div class="dark-bar"></div>
+      <div class="dark-metric"><span class="label">Active Users</span><span class="value blue">14,382</span></div>
+      <div class="dark-bar"></div>
+      <div class="dark-metric"><span class="label">Conversion</span><span class="value">3.8%</span></div>
+      <div class="dark-chart">
+        <div class="dark-bar-item" style="height:40%"><div class="fill" style="background:#00ff88;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:65%"><div class="fill" style="background:#00ff88;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:50%"><div class="fill" style="background:#00ff88;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:80%"><div class="fill" style="background:#00bfff;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:55%"><div class="fill" style="background:#00ff88;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:95%"><div class="fill" style="background:#00bfff;height:100%"></div></div>
+        <div class="dark-bar-item" style="height:70%"><div class="fill" style="background:#00ff88;height:100%"></div></div>
+      </div>
+    </div>
+    <div class="style-label">
+      <h3>Dark Mode OLED</h3>
+      <p>Night-mode apps · coding platforms · entertainment</p>
+    </div>
+  </div>
+
+  <!-- 3. CYBERPUNK -->
+  <div class="style-card cyber-demo">
+    <div class="cyber-card">
+      <div class="cyber-title">// SYSTEM STATUS</div>
+      <div class="cyber-heading">NEURAL<br><span>NETWORK</span><br>ONLINE</div>
+      <div class="cyber-line"></div>
+      <div class="cyber-item"><div class="cyber-dot"></div>AI Core: Operational</div>
+      <div class="cyber-item"><div class="cyber-dot pink"></div>Data Link: Synchronized</div>
+      <div class="cyber-item"><div class="cyber-dot"></div>Security: Level 5 Active</div>
+      <div class="cyber-btn">INITIATE SEQUENCE</div>
+    </div>
+    <div class="style-label">
+      <h3>Cyberpunk</h3>
+      <p>Gaming · crypto · sci-fi apps · developer tools</p>
+    </div>
+  </div>
+
+  <!-- 4. NEUMORPHISM -->
+  <div class="style-card neu-demo">
+    <div class="neu-card">
+      <div class="neu-ring">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5a7ab5" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="neu-title">HEALTH TRACKER</div>
+      <div class="neu-big">87<span style="font-size:18px;color:#7a8a9a">%</span></div>
+      <div class="neu-sub">Wellness score · This week</div>
+      <button class="neu-btn">View Details</button>
+      <button class="neu-btn" style="color:#8a9aaa">Set Goals</button>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(200,205,215,0.9) 0%, transparent 100%)">
+      <h3 style="color:#3d4d60">Neumorphism</h3>
+      <p style="color:rgba(60,80,100,0.6)">Health/wellness · meditation · minimal UIs</p>
+    </div>
+  </div>
+
+  <!-- 5. BRUTALISM -->
+  <div class="style-card brutal-demo">
+    <div class="brutal-card">
+      <span class="brutal-tag">NEW DROP</span>
+      <div class="brutal-h">MAKE IT<br>LOUD.</div>
+      <p class="brutal-p">No filters. No nonsense. Just pure, uncompromising design that says exactly what it means.</p>
+      <div class="brutal-btn">GET STARTED →</div>
+      <div class="brutal-box">
+        <div><div class="brutal-num">2.4M</div><div class="brutal-label">Users</div></div>
+        <div style="width:3px;background:#0a0a0a;height:40px"></div>
+        <div><div class="brutal-num">98%</div><div class="brutal-label">Uptime</div></div>
+        <div style="width:3px;background:#0a0a0a;height:40px"></div>
+        <div><div class="brutal-num">$0</div><div class="brutal-label">To start</div></div>
+      </div>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(240,235,225,0.9) 0%, transparent 100%)">
+      <h3 style="color:#0a0a0a">Brutalism / Neo-Brutalism</h3>
+      <p style="color:rgba(10,10,10,0.5)">Fashion · agency · bold brands · editorial</p>
+    </div>
+  </div>
+
+  <!-- 6. AI-NATIVE -->
+  <div class="style-card ai-demo">
+    <div class="ai-chat">
+      <div class="ai-msg">
+        <div class="ai-name">Claude</div>
+        <div class="ai-bubble bot">Hey! I can help you analyze your Q2 data. What would you like to know?</div>
+      </div>
+      <div class="ai-msg" style="text-align:right;margin-top:8px">
+        <div class="ai-bubble user">Show me top performing channels</div>
+      </div>
+      <div class="ai-msg" style="margin-top:8px">
+        <div class="ai-name">Claude</div>
+        <div class="ai-bubble bot">Sure! Organic search is up 42%, with email close behind at 38%. Social grew 18% this quarter.</div>
+      </div>
+      <div class="ai-msg" style="margin-top:8px">
+        <div class="ai-typing">
+          <div class="dot-pulse"></div>
+          <div class="dot-pulse"></div>
+          <div class="dot-pulse"></div>
+        </div>
+      </div>
+      <div class="ai-input">
+        <span class="placeholder">Ask anything...</span>
+        <div class="ai-send">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(240,242,255,0.95) 0%, transparent 100%)">
+      <h3 style="color:#1a1a2e">AI-Native UI</h3>
+      <p style="color:rgba(26,26,46,0.55)">AI products · chatbots · copilots · assistants</p>
+    </div>
+  </div>
+
+  <!-- 7. SWISS MODERNISM -->
+  <div class="style-card swiss-demo">
+    <div class="swiss-card">
+      <div class="swiss-sub">Performance Overview</div>
+      <div class="swiss-title">Q2 Report<br>2026</div>
+      <div class="swiss-grid">
+        <div class="swiss-cell"><div class="swiss-num">84k</div><div class="swiss-label">Revenue</div></div>
+        <div class="swiss-cell swiss-accent"><div class="swiss-num">+24%</div><div class="swiss-label">Growth</div></div>
+        <div class="swiss-cell"><div class="swiss-num">1.2k</div><div class="swiss-label">Clients</div></div>
+        <div class="swiss-cell"><div class="swiss-num">99%</div><div class="swiss-label">Uptime</div></div>
+      </div>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(255,255,255,0.9) 0%, transparent 100%)">
+      <h3 style="color:#000">Swiss Modernism 2.0</h3>
+      <p style="color:rgba(0,0,0,0.45)">Corporate · SaaS · architecture · editorial</p>
+    </div>
+  </div>
+
+  <!-- 8. LIQUID GLASS -->
+  <div class="style-card liquid-demo">
+    <div class="liquid-card">
+      <div class="liquid-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="liquid-h">Live Sessions</div>
+      <div class="liquid-p">Real-time collaboration across all your teams</div>
+      <span class="liquid-pill">Join Now</span>
+      <div class="liquid-row">
+        <div class="liquid-tag">Design</div>
+        <div class="liquid-tag">Engineering</div>
+        <div class="liquid-tag">Growth</div>
+      </div>
+    </div>
+    <div class="style-label">
+      <h3>Liquid Glass</h3>
+      <p>Premium SaaS · high-end e-commerce · luxury portfolios</p>
+    </div>
+  </div>
+
+  <!-- 9. EXAGGERATED MINIMALISM -->
+  <div class="style-card exmin-demo">
+    <div class="exmin-card">
+      <div class="exmin-kicker">Studio Collective</div>
+      <div class="exmin-h">Less<br>is<br>more.</div>
+      <div class="exmin-divider"></div>
+      <p class="exmin-p">We strip away everything that doesn't serve the message. What's left is exactly what matters.</p>
+      <span class="exmin-link">See Our Work</span>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(255,255,255,0.9) 0%, transparent 100%)">
+      <h3 style="color:#000">Exaggerated Minimalism</h3>
+      <p style="color:rgba(0,0,0,0.45)">Fashion · architecture · portfolios · agencies</p>
+    </div>
+  </div>
+
+  <!-- 10. FLAT DESIGN -->
+  <div class="style-card flat-demo">
+    <div class="flat-card">
+      <div class="flat-tabs">
+        <div class="flat-tab active">Overview</div>
+        <div class="flat-tab">Traffic</div>
+        <div class="flat-tab">Revenue</div>
+      </div>
+      <div class="flat-row">
+        <div class="flat-block" style="background:#4a9eff">
+          <div class="f-num">12.4k</div>
+          <div class="f-lbl">Users</div>
+        </div>
+        <div class="flat-block" style="background:#ff6b6b">
+          <div class="f-num">$84k</div>
+          <div class="f-lbl">Sales</div>
+        </div>
+        <div class="flat-block" style="background:#48c774">
+          <div class="f-num">98%</div>
+          <div class="f-lbl">Uptime</div>
+        </div>
+      </div>
+      <div class="flat-list">
+        <div class="flat-item">
+          <div class="flat-icon" style="background:#4a9eff22">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <span class="flat-item-label">Scheduled Tasks</span>
+          <span style="font-size:12px;color:#4a9eff;margin-left:auto;font-weight:700">24</span>
+        </div>
+        <div class="flat-item">
+          <div class="flat-icon" style="background:#ff6b6b22">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
+          </div>
+          <span class="flat-item-label">Deployments</span>
+          <span style="font-size:12px;color:#ff6b6b;margin-left:auto;font-weight:700">8</span>
+        </div>
+      </div>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(235,240,245,0.9) 0%, transparent 100%)">
+      <h3 style="color:#223">Flat Design</h3>
+      <p style="color:rgba(34,34,51,0.5)">Web apps · dashboards · startup MVPs · SaaS</p>
+    </div>
+  </div>
+
+  <!-- 11. E-INK / PAPER -->
+  <div class="style-card eink-demo">
+    <div class="eink-card">
+      <div class="eink-date">Tuesday, 20 May 2026 · Issue 142</div>
+      <h3 class="eink-h">The Slow Design Movement Is Here to Stay</h3>
+      <div class="eink-byline">By Amara Osei · 4 min read</div>
+      <p class="eink-body">In a world of infinite scroll and dopamine loops, designers are returning to something older — the quiet authority of paper, ink, and intention.</p>
+      <div class="eink-tags">
+        <span class="eink-tag">Design</span>
+        <span class="eink-tag">Culture</span>
+        <span class="eink-tag">Craft</span>
+      </div>
+    </div>
+    <div class="style-label" style="background:linear-gradient(to top, rgba(240,236,228,0.9) 0%, transparent 100%)">
+      <h3 style="color:#1a1510">E-Ink / Paper</h3>
+      <p style="color:rgba(26,21,16,0.5)">Reading apps · journals · minimal · distraction-free</p>
+    </div>
+  </div>
+
+  <!-- 12. EXECUTIVE DASHBOARD -->
+  <div class="style-card exec-demo">
+    <div class="exec-card">
+      <div class="exec-header">
+        <span class="exec-title">Executive Summary</span>
+        <span class="exec-badge">Live</span>
+      </div>
+      <div class="exec-kpis">
+        <div class="exec-kpi">
+          <div class="k-val">$2.4M</div>
+          <div class="k-label">ARR</div>
+          <div class="k-trend up">↑ 18% YoY</div>
+        </div>
+        <div class="exec-kpi">
+          <div class="k-val">94%</div>
+          <div class="k-label">Retention</div>
+          <div class="k-trend up">↑ 3pp</div>
+        </div>
+        <div class="exec-kpi">
+          <div class="k-val">$4.2k</div>
+          <div class="k-label">CAC</div>
+          <div class="k-trend down">↓ 12%</div>
+        </div>
+        <div class="exec-kpi">
+          <div class="k-val">8.4x</div>
+          <div class="k-label">LTV/CAC</div>
+          <div class="k-trend up">↑ Target</div>
+        </div>
+      </div>
+      <div class="exec-bar-row">
+        <span class="b-label">Organic</span>
+        <div class="exec-bar-track"><div class="exec-bar-fill" style="width:72%;background:#22c55e"></div></div>
+        <span class="b-val">72%</span>
+      </div>
+      <div class="exec-bar-row">
+        <span class="b-label">Paid</span>
+        <div class="exec-bar-track"><div class="exec-bar-fill" style="width:44%;background:#6366f1"></div></div>
+        <span class="b-val">44%</span>
+      </div>
+      <div class="exec-bar-row">
+        <span class="b-label">Referral</span>
+        <div class="exec-bar-track"><div class="exec-bar-fill" style="width:28%;background:#f59e0b"></div></div>
+        <span class="b-val">28%</span>
+      </div>
+    </div>
+    <div class="style-label">
+      <h3>Executive Dashboard</h3>
+      <p>C-suite · business reports · strategic planning</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="padding:40px 32px;border-top:1px solid #1a1a1a;margin-top:2px">
+  <p style="color:#555;font-size:13px;margin:0">
+    <strong style="color:#888">How to use:</strong> Tell me which style(s) caught your eye and describe what you want to build — a dashboard, landing page, app UI, etc. The skill will generate a matching design system and build it for you.
+  </p>
+  <p style="color:#444;font-size:11px;margin:12px 0 0">96 color palettes · 57 font pairings · 67 styles · 13 tech stacks — all searchable</p>
+</div>
+
+</body>
+</html>
