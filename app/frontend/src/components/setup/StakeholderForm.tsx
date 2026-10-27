@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { StakeholderPayload, StakeholderResult } from '../../types/setup'
+import { ApiError } from '../../api'
 import { ERR, FIELD, FORM_CSS, LABEL, OK, PRIMARY, slugify } from './formStyles'
 
 interface Props {
@@ -48,12 +49,14 @@ export function StakeholderForm({ onSubmit }: Props) {
       setIdEdited(false)
       setLeadership(false)
     } catch (e) {
-      const conflict = e instanceof Error && e.message.includes('409')
+      const status = e instanceof ApiError ? e.status : 0
+      const detail = e instanceof ApiError ? e.detail : null
       setMessage({
         ok: false,
-        text: conflict
-          ? `A person with id "${payload.person_id}" already exists.`
-          : 'Could not add the person.',
+        text:
+          status === 409
+            ? `A person with id "${payload.person_id}" already exists.`
+            : (detail ?? 'Could not add the person.'),
       })
     } finally {
       setBusy(false)

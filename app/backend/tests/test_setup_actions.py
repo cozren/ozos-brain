@@ -236,7 +236,8 @@ def test_env_write_preserves_other_lines_and_partial_set_is_not_done(vault):
     (vault / ".env").write_text("# mine\nANTHROPIC_API_KEY=k\nATLASSIAN_EMAIL=old@x.y\n")
     write_env({"ATLASSIAN_EMAIL": "new@x.y"})
     text = (vault / ".env").read_text()
-    assert text.splitlines() == ["# mine", "ANTHROPIC_API_KEY=k", "ATLASSIAN_EMAIL=new@x.y"]
+    # values are double-quoted so `#`, quotes and spaces survive dotenv parsing
+    assert text.splitlines() == ["# mine", "ANTHROPIC_API_KEY=k", 'ATLASSIAN_EMAIL="new@x.y"']
     assert env_status()["ATLASSIAN_EMAIL"] is True and env_status()["ATLASSIAN_TOKEN"] is False
     assert load_state()["items"]["confluence"]["status"] == "not_started"
 
@@ -265,3 +266,52 @@ def test_gmail_status_reports_files(vault, tmp_path):
     s = gmail_status()
     assert s["credentials_file"] is True and s["token_file"] is False
     assert s["drive_parent_folder_id"] == "folder123"
+
+
+# ── review fixes ────────────────────────────────────────────────────────
+
+
+def test_update_routing_keeps_group_rule_folders(vault):
+    """Replacing the folder list must not orphan a group rule's folder (the
+    categoriser only picks from `folders`, and the rule reroutes into one of them)."""
+    add_stakeholder({"person_id": "pat", "display_name": "Pat A", "leadership": True})
+    r = update_routing(folders=["Design"], default_folder="Other")
+    assert r["folders"] == ["Design", "Other", "Leadership"]
+
+
+def test_env_values_round_trip_through_dotenv(vault):
+    tricky = 'a #b "q" \\x y'
+    write_env({"ATLASSIAN_TOKEN": tricky, "ATLASSIAN_EMAIL": " padded@x.y "})
+    from dotenv import dotenv_values
+
+    values = dotenv_values(vault / ".env")
+    assert values["ATLASSIAN_TOKEN"] == tricky
+    assert values["ATLASSIAN_EMAIL"] == "padded@x.y"
+
+
+def test_env_write_is_atomic_and_private_from_creation(vault, monkeypatch):
+    """The temp file is created 0600 and swapped in; a crash mid-write cannot
+    truncate the existing .env."""
+    (vault / ".env").write_text("ANTHROPIC_API_KEY=k\n")
+    seen: list[tuple[str, int]] = []
+    real_open = setup_actions.os.open
+
+    def spy_open(path, flags, mode=0o777, *a, **k):
+        seen.append((str(path), mode))
+        return real_open(path, flags, mode, *a, **k)
+
+    monkeypatch.setattr(setup_actions.os, "open", spy_open)
+    real_replace = setup_actions.os.replace
+
+    def boom(src, dst):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(setup_actions.os, "replace", boom)
+    with pytest.raises(OSError):
+        write_env({"ATLASSIAN_EMAIL": "a@b.c"})
+    assert (vault / ".env").read_text() == "ANTHROPIC_API_KEY=k\n"
+    assert seen and seen[0][1] == 0o600 and seen[0][0] != str(vault / ".env")
+    monkeypatch.setattr(setup_actions.os, "replace", real_replace)
+    write_env({"ATLASSIAN_EMAIL": "a@b.c"})
+    assert (vault / ".env").stat().st_mode & 0o777 == 0o600
+    assert not list(vault.glob(".env.*"))

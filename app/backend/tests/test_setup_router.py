@@ -136,3 +136,26 @@ def test_env_endpoints_never_echo_values(action_env):
 def test_gmail_endpoint(action_env):
     body = client.get("/api/setup/gmail").json()
     assert body["credentials_file"] is False and "--auth" in body["auth_command"]
+
+
+def test_get_routing_endpoint_returns_current_routing(action_env):
+    client.post(
+        "/api/setup/people",
+        json={"person_id": "pat", "display_name": "Pat", "team_folder": "Growth"},
+    )
+    r = client.get("/api/setup/routing")
+    assert r.status_code == 200
+    assert "Growth" in r.json()["folders"] and r.json()["default_folder"] == "Other"
+
+
+def test_env_422_detail_never_contains_the_value(action_env):
+    bad = client.put("/api/setup/env", json={"vars": {"ANTHROPIC_API_KEY": "zq9-secret-zq9"}})
+    assert bad.status_code == 422
+    assert "zq9-secret-zq9" not in bad.text
+    bad = client.put("/api/setup/env", json={"vars": {"ATLASSIAN_TOKEN": "zq9\nzq9"}})
+    assert bad.status_code == 422 and "zq9" not in bad.text
+
+
+def test_people_422_detail_names_the_rule(action_env):
+    r = client.post("/api/setup/people", json={"person_id": "Pat Example", "display_name": "x"})
+    assert r.status_code == 422 and "lowercase" in r.json()["detail"]

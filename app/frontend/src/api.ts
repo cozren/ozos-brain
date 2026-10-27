@@ -52,6 +52,31 @@ export interface ChatStreamEvent {
 
 const BASE = '/api'
 
+// A failed request with the backend's `detail` (FastAPI's HTTPException body)
+// so forms can show the actual reason instead of a bare status code.
+export class ApiError extends Error {
+  status: number
+  detail: string | null
+  constructor(status: number, detail: string | null, label?: string) {
+    super(detail ?? `${label ?? 'Request'} failed: ${status}`)
+    this.name = 'ApiError'
+    this.status = status
+    this.detail = detail
+  }
+}
+
+export async function throwIfNotOk(r: Response, label: string): Promise<Response> {
+  if (r.ok) return r
+  let detail: string | null = null
+  try {
+    const body = await r.clone().json()
+    if (typeof body?.detail === 'string') detail = body.detail
+  } catch {
+    detail = null
+  }
+  throw new ApiError(r.status, detail, label)
+}
+
 export const api = {
   getCycles: (): Promise<CyclesData> => fetch(`${BASE}/cycles`).then((r) => r.json()),
 
@@ -629,20 +654,18 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Add stakeholder failed: ${r.status}`)
-      return r.json()
-    }),
+    })
+      .then((r) => throwIfNotOk(r, 'Add stakeholder'))
+      .then((r) => r.json()),
 
   setSetupCycle: (payload: CyclePayload): Promise<unknown> =>
     fetch(`${BASE}/setup/cycle`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Save cycle failed: ${r.status}`)
-      return r.json()
-    }),
+    })
+      .then((r) => throwIfNotOk(r, 'Save cycle'))
+      .then((r) => r.json()),
 
   getSetupEnv: (): Promise<Record<string, boolean>> =>
     fetch(`${BASE}/setup/env`).then((r) => {
@@ -655,10 +678,10 @@ export const api = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ vars }),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Write env failed: ${r.status}`)
-      return r.json().then((b: { set: string[] }) => b.set)
-    }),
+    })
+      .then((r) => throwIfNotOk(r, 'Write env'))
+      .then((r) => r.json())
+      .then((b: { set: string[] }) => b.set),
 
   addSetupFolder: (
     itemId: string,
@@ -668,10 +691,9 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ item_id: itemId, folder }),
-    }).then((r) => {
-      if (!r.ok) throw new Error(`Create folder failed: ${r.status}`)
-      return r.json()
-    }),
+    })
+      .then((r) => throwIfNotOk(r, 'Create folder'))
+      .then((r) => r.json()),
 
   setSetupRouting: (payload: RoutingPayload): Promise<unknown> =>
     fetch(`${BASE}/setup/routing`, {
@@ -680,6 +702,12 @@ export const api = {
       body: JSON.stringify(payload),
     }).then((r) => {
       if (!r.ok) throw new Error(`Save routing failed: ${r.status}`)
+      return r.json()
+    }),
+
+  getSetupRouting: (): Promise<RoutingPayload> =>
+    fetch(`${BASE}/setup/routing`).then((r) => {
+      if (!r.ok) throw new Error(`Load routing failed: ${r.status}`)
       return r.json()
     }),
 

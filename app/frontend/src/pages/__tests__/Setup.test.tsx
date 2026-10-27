@@ -10,7 +10,9 @@ vi.mock('../../api', () => ({
     dismissSetup: vi.fn(),
     getSetupEnv: vi.fn().mockResolvedValue({}),
     getSetupGmail: vi.fn().mockResolvedValue(null),
+    getSetupRouting: vi.fn().mockResolvedValue(null),
   },
+  ApiError: class ApiError extends Error {},
 }))
 
 import { Setup } from '../Setup'

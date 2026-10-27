@@ -42,7 +42,8 @@ test('submit is disabled until name and id are present, then sends the payload',
 })
 
 test('a duplicate id shows the backend conflict message', async () => {
-  const onSubmit = vi.fn().mockRejectedValue(new Error('409'))
+  const { ApiError } = await import('../../../api')
+  const onSubmit = vi.fn().mockRejectedValue(new ApiError(409, 'exists'))
   render(<StakeholderForm onSubmit={onSubmit} />)
   fill('Name', 'Sam')
   fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
@@ -50,4 +51,33 @@ test('a duplicate id shows the backend conflict message', async () => {
     expect(screen.getByText('A person with id "sam" already exists.')).toBeInTheDocument()
   )
   expect(screen.getByLabelText('Name')).toHaveValue('Sam')
+})
+
+test('a rejected id shows the backend reason', async () => {
+  const { ApiError } = await import('../../../api')
+  const onSubmit = vi
+    .fn()
+    .mockRejectedValue(new ApiError(422, 'person_id must be lowercase letters, digits and dashes'))
+  render(<StakeholderForm onSubmit={onSubmit} />)
+  fill('Name', 'Pat')
+  fill('Person id', 'Pat.Example')
+  fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
+  await waitFor(() =>
+    expect(
+      screen.getByText('person_id must be lowercase letters, digits and dashes')
+    ).toBeInTheDocument()
+  )
+})
+
+test('a 409 is detected by status, not by message text', async () => {
+  const { ApiError } = await import('../../../api')
+  const onSubmit = vi
+    .fn()
+    .mockRejectedValue(new ApiError(409, "A person with id 'sam' already exists"))
+  render(<StakeholderForm onSubmit={onSubmit} />)
+  fill('Name', 'Sam')
+  fireEvent.click(screen.getByRole('button', { name: 'Add person' }))
+  await waitFor(() =>
+    expect(screen.getByText('A person with id "sam" already exists.')).toBeInTheDocument()
+  )
 })

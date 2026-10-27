@@ -10,6 +10,7 @@ vi.mock('../../api', () => ({
     getSetupReminders: (...a: unknown[]) => getSetupReminders(...a),
     dismissSetup: (...a: unknown[]) => dismissSetup(...a),
   },
+  ApiError: class ApiError extends Error {},
 }))
 vi.mock('../../components/control-tower/BrainVisual', () => ({
   BrainVisual: () => <div data-testid="brain" />,

@@ -96,8 +96,13 @@ def update_routing(
         routing["folders"] = [f.strip() for f in folders if f and f.strip()]
     if default_folder is not None and default_folder.strip():
         routing["default_folder"] = default_folder.strip()
-    if routing["default_folder"] not in routing["folders"]:
-        routing["folders"].append(routing["default_folder"])
+    # The categoriser only picks from `folders`; keep the default and every group
+    # rule's target in the list so a replaced list cannot orphan them.
+    for must in [routing["default_folder"]] + [
+        r.get("folder") for r in routing["group_rules"] if r.get("folder")
+    ]:
+        if must not in routing["folders"]:
+            routing["folders"].append(must)
     if tagging_guide is not None:
         routing["tagging_guide"] = tagging_guide
     if drive_parent_folder_id is not _UNSET:
@@ -291,6 +296,30 @@ def add_drop_folder(item_id: str, folder: str) -> dict:
 # ── env ─────────────────────────────────────────────────────────────────
 
 
+def _quote_env(value: str) -> str:
+    """Double-quote a value so `#`, quotes and spaces survive dotenv parsing."""
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _write_private_atomic(path: Path, text: str) -> None:
+    """Create a 0600 temp beside `path` and swap it in, so a crash can never leave
+    a truncated .env and the file is never readable by others, not even briefly."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    os.chmod(path, 0o600)
+
+
 def env_status() -> dict[str, bool]:
     values = dotenv_values(ENV_FILE) if ENV_FILE.is_file() else {}
     return {name: bool((values.get(name) or "").strip()) for name in env_whitelist()}
@@ -308,7 +337,7 @@ def write_env(vars: dict[str, str]) -> list[str]:
     lines = ENV_FILE.read_text(encoding="utf-8").splitlines() if ENV_FILE.is_file() else []
     written: list[str] = []
     for name, value in vars.items():
-        new_line = f"{name}={value}"
+        new_line = f"{name}={_quote_env(str(value).strip())}"
         replaced = False
         for i, line in enumerate(lines):
             if line.split("=", 1)[0].strip() == name:
@@ -318,9 +347,7 @@ def write_env(vars: dict[str, str]) -> list[str]:
         if not replaced:
             lines.append(new_line)
         written.append(name)
-    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
-    ENV_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    os.chmod(ENV_FILE, 0o600)
+    _write_private_atomic(ENV_FILE, "\n".join(lines) + "\n")
     status = env_status()
     for it in (i for i in ITEMS if set(i["env"]) & set(written)):
         if all(status.get(n) for n in it["env"]):

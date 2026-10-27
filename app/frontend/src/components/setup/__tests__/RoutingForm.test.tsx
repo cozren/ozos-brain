@@ -23,3 +23,20 @@ test('save is disabled without at least one folder', () => {
   render(<RoutingForm onSave={vi.fn()} />)
   expect(screen.getByRole('button', { name: 'Save routing' })).toBeDisabled()
 })
+
+test('prefills the current folders, default and guide so saving never drops them', () => {
+  render(
+    <RoutingForm
+      routing={{
+        folders: ['Growth', 'Leadership', 'Other'],
+        default_folder: 'Other',
+        tagging_guide: 'Tag teams.',
+      }}
+      onSave={vi.fn()}
+    />
+  )
+  expect(screen.getByLabelText('Folders (one per line)')).toHaveValue('Growth\nLeadership\nOther')
+  expect(screen.getByLabelText('Default folder')).toHaveValue('Other')
+  expect(screen.getByLabelText('Tagging guide')).toHaveValue('Tag teams.')
+  expect(screen.getByRole('button', { name: 'Save routing' })).toBeEnabled()
+})

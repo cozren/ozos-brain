@@ -3,15 +3,17 @@ import type { RoutingPayload } from '../../types/setup'
 import { ERR, FIELD, FORM_CSS, HINT, LABEL, OK, PRIMARY } from './formStyles'
 
 interface Props {
+  routing?: RoutingPayload | null
   onSave: (payload: RoutingPayload) => Promise<unknown>
 }
 
 // The folders a meeting note may be routed to, plus the free-text tagging guide
 // appended to the categorisation prompt. Writes .ozos/meeting-routing.json.
-export function RoutingForm({ onSave }: Props) {
-  const [foldersText, setFoldersText] = useState('')
-  const [defaultFolder, setDefaultFolder] = useState('Other')
-  const [guide, setGuide] = useState('')
+// Saving replaces the folder list, so the form always starts from the current one.
+export function RoutingForm({ routing, onSave }: Props) {
+  const [foldersText, setFoldersText] = useState(() => (routing?.folders ?? []).join('\n'))
+  const [defaultFolder, setDefaultFolder] = useState(routing?.default_folder ?? 'Other')
+  const [guide, setGuide] = useState(routing?.tagging_guide ?? '')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 

@@ -115,6 +115,11 @@ def post_folder(body: NewFolder):
         raise HTTPException(422, str(exc))
 
 
+@router.get("/routing")
+def get_routing():
+    return setup_actions.load_routing()
+
+
 @router.put("/routing")
 def put_routing(body: RoutingUpdate):
     kwargs: dict = {

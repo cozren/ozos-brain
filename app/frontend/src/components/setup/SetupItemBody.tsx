@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { GmailStatus, SetupCadence, SetupItem } from '../../types/setup'
+import type { GmailStatus, RoutingPayload, SetupCadence, SetupItem } from '../../types/setup'
 import { api } from '../../api'
 import { StakeholderForm } from './StakeholderForm'
 import { CycleForm } from './CycleForm'
@@ -94,6 +94,36 @@ function EnvItem({ item, onChanged }: { item: SetupItem; onChanged: () => void }
   )
 }
 
+// Loads the current routing first: the form replaces the folder list on save, so
+// it must start from what is there (stakeholders add team folders behind its back).
+// If it cannot be loaded, no form is offered: a blank save would wipe the folders.
+function RoutingItem({ onChanged }: { onChanged: () => void }) {
+  const [routing, setRouting] = useState<RoutingPayload | null | undefined>(undefined)
+  useEffect(() => {
+    api
+      .getSetupRouting()
+      .then(setRouting)
+      .catch(() => setRouting(null))
+  }, [])
+  if (routing === undefined) return <p style={HINT}>Loading routing…</p>
+  if (routing === null)
+    return (
+      <p style={{ ...HINT, color: '#F59E0B' }}>
+        Could not load the current routing; reload before editing folders.
+      </p>
+    )
+  return (
+    <RoutingForm
+      routing={routing}
+      onSave={async (payload) => {
+        await api.setSetupRouting(payload)
+        setRouting(await api.getSetupRouting().catch(() => payload))
+        onChanged()
+      }}
+    />
+  )
+}
+
 function GmailItem({ onChanged }: { onChanged: () => void }) {
   const [status, setStatus] = useState<GmailStatus | null>(null)
   useEffect(() => {
@@ -129,14 +159,7 @@ export function SetupItemBody({ item, onChanged, cadence }: Props) {
         </p>
       )
     case 'routing':
-      return (
-        <RoutingForm
-          onSave={async (payload) => {
-            await api.setSetupRouting(payload)
-            onChanged()
-          }}
-        />
-      )
+      return <RoutingItem onChanged={onChanged} />
     case 'mcp':
       return <McpPanel item={item} />
     case 'env':
