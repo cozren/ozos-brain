@@ -172,3 +172,11 @@ def test_vault_template_has_empty_datapoints_file_and_ignores_cache():
     tpl = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "datapoints.json").read_text())
     assert tpl == {"datapoints": []}
     assert ".ozos/datapoint-cache/" in (REPO_ROOT / "vault-template" / ".gitignore").read_text()
+
+
+def test_vault_template_has_datapoints_refresh_vital():
+    vitals = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "vitals.json").read_text())
+    [v] = [v for v in vitals["vitals"] if v["id"] == "datapoints-refresh"]
+    assert v["run"] == ["python3", "ozos", "datapoints", "refresh"]
+    assert v["output_dir"] == ".ozos/datapoint-cache" and v["output_glob"] == "*.json"
+    assert v["stale_after_hours"] == 24

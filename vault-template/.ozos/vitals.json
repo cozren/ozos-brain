@@ -29,6 +29,16 @@
       "output_glob": "GRAPH_REPORT.md",
       "stale_after_hours": 168,
       "run": ["graphify", "update", "."]
+    },
+    {
+      "id": "datapoints-refresh",
+      "name": "datapoints-refresh",
+      "tool": "ozos-cli",
+      "description": "Refreshes every daily data point into the vault cache",
+      "output_dir": ".ozos/datapoint-cache",
+      "output_glob": "*.json",
+      "stale_after_hours": 24,
+      "run": ["python3", "ozos", "datapoints", "refresh"]
     }
   ]
 }

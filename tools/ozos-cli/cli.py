@@ -267,6 +267,45 @@ def setup_cmd(args: argparse.Namespace) -> int:
     return 0
 
 
+# ── datapoints ──────────────────────────────────────────────────────────────
+
+
+def datapoints_refresh(vault: Path, daily_only: bool) -> int:
+    """The `datapoints-refresh` vital: refresh daily points (or all with --all) into
+    the vault cache, one line per point, exit 1 when any fetch failed."""
+    os.environ["OZOS_VAULT"] = str(vault)  # backend.config binds the vault at import
+    sys.path.insert(0, str(ENGINE_ROOT / "app"))
+    import run_log  # noqa: E402  (skills/ is on sys.path at module import)
+    from backend.services import datapoints  # noqa: E402
+
+    points = [p for p in datapoints.load_datapoints() if not daily_only or p["refresh"] == "daily"]
+    if not points:
+        print("no data points to refresh")
+        return 0
+    result = datapoints.refresh_all(daily_only=daily_only)
+    for point in points:
+        value = datapoints.read_value(point["id"])
+        if value["error"]:
+            print(f"{point['id']}: error: {value['error']}")
+        else:
+            print(f"{point['id']}: {len(value['rows'])} rows")
+    run_log.record_run(
+        vault / ".ozos" / "runs",
+        "datapoints-refresh",
+        result["refreshed"],
+        [p["id"] for p in points if p["id"] not in result["failed"]],
+    )
+    return 1 if result["failed"] else 0
+
+
+def datapoints_cmd(args: argparse.Namespace) -> int:
+    vault = ozos_vault.vault_dir(ENGINE_ROOT, home=HOME)
+    if args.datapoints_cmd == "refresh":
+        return datapoints_refresh(vault, daily_only=not args.all)
+    print("usage: ozos datapoints refresh [--all]", file=sys.stderr)
+    return 2
+
+
 # ── scrub-check ─────────────────────────────────────────────────────────────
 
 
@@ -358,6 +397,12 @@ def build_parser() -> argparse.ArgumentParser:
     mk.add_argument("status")
     mk.add_argument("--notes", default=None)
     st.set_defaults(func=setup_cmd)
+
+    dp = sub.add_parser("datapoints", help="`datapoints refresh` fetches daily data points")
+    dp_sub = dp.add_subparsers(dest="datapoints_cmd")
+    rf = dp_sub.add_parser("refresh", help="refresh daily data points into the vault cache")
+    rf.add_argument("--all", action="store_true", help="refresh manual points too")
+    dp.set_defaults(func=datapoints_cmd)
 
     s = sub.add_parser("scrub-check", help="fail if forbidden terms appear in the engine tree")
     s.add_argument("--terms", default=str(HOME / ".ozos" / "scrub-terms.txt"))
