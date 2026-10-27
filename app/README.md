@@ -24,8 +24,8 @@ remove the flag; by default it reloads on edit.
 | People Hub | People YAML under `<vault>/people-hub/`, review cycles, documents |
 | Knowledge Hub | Folder tree over `<vault>/knowledge-hub/` sources, tags, stars, preview |
 | Setup | The onboarding checklist: connect sources, add stakeholders, pick a review cycle (`/api/setup`) |
-| Goals & Tasks | Goals by hand or synced from Atlassian (`/api/goals`, `<vault>/.ozos/goals.json`), plus personal tasks |
-| Data Hub | User-defined tabs of dashboard tiles; empty until data points exist |
+| Goals & Tasks | Goals by hand or synced from Atlassian (`/api/goals`, `<vault>/.ozos/goals.json`), each bindable to a data point, plus personal tasks |
+| Data Hub | User-defined tabs of tiles showing data points (`/api/datapoints`, `<vault>/.ozos/datapoints.json`, values cached in `.ozos/datapoint-cache/`) |
 | Reporting | Daily digest, meeting notes archive, intel agents |
 | Control Tower / System Health | Vitals, MCPs, commands, hooks, test board |
 | Floating chat | Claude tool loop over the vault (people, notes, Confluence) |

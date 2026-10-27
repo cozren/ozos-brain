@@ -125,6 +125,11 @@ def test_setup_guide_describes_the_setup_page():
     assert "Phase 3" in readme and "Goals" in readme
     app_readme = (REPO_ROOT / "app" / "README.md").read_text(encoding="utf-8")
     assert "arrive in Phase 3" not in app_readme and "/api/goals" in app_readme
+    # Phase 4: the guide has a Data points section and a datapoints.json reference.
+    assert "## 9. Data points" in guide and "### A.7 `datapoints.json`" in guide
+    assert "Placeholder until Phase 4" not in guide and "Phases 4 and 5" not in guide
+    assert "Phase 4" in readme and "data point" in readme.lower()
+    assert "/api/datapoints" in app_readme
 
 
 def test_define_goals_is_a_real_item():
@@ -180,3 +185,16 @@ def test_vault_template_has_datapoints_refresh_vital():
     assert v["run"] == ["python3", "ozos", "datapoints", "refresh"]
     assert v["output_dir"] == ".ozos/datapoint-cache" and v["output_glob"] == "*.json"
     assert v["stale_after_hours"] == 24
+
+
+def test_data_docs_no_longer_defer_to_phase_4():
+    setup_md = (REPO_ROOT / "connectors" / "metabase" / "setup.md").read_text()
+    assert "Phase 4" not in setup_md and "placeholder" not in setup_md.lower()
+    assert "Test connection" in setup_md and "METABASE_API_KEY" in setup_md
+    skill = (REPO_ROOT / ".claude" / "skills" / "ozos-setup" / "SKILL.md").read_text()
+    assert "first-data-point" in skill and "/api/datapoints" in skill
+    assert "datapoints.add_datapoint" in skill
+    readme = (REPO_ROOT / "connectors" / "metabase" / "README.md").read_text()
+    assert "/api/datapoints" in readme and "query_card" in readme
+    for rel in ("CLAUDE.md", "AGENTS.md"):
+        assert "data point" in (REPO_ROOT / rel).read_text().lower(), rel

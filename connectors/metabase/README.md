@@ -4,6 +4,14 @@ Direct, **read-only** Metabase REST client. It only reads a dashboard you point
 it at and the result rows of the cards on that dashboard — no database, schema,
 or collection browsing.
 
+## In the app
+
+Data points of kind `metabase` (Setup → Data points, or the Data Hub empty state) call
+`MetabaseClient.query_card(card_id)` through `POST /api/datapoints/<id>/refresh` and cache
+the columns and rows in `<vault>/.ozos/datapoint-cache/`. The Setup page writes
+`METABASE_URL` and `METABASE_API_KEY` into the vault `.env`; `POST /api/datapoints/metabase/test`
+makes one authenticated request to check them. See `setup.md`.
+
 ## Configuration (vault `.env`)
 
 ```

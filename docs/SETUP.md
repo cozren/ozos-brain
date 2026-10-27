@@ -114,7 +114,7 @@ enable each source; `<vault>/.env.example` lists them with comments.
 | `OZOS_LLM_BASE_URL`, `OZOS_LLM_MODEL` | optional proxy and model override |
 | `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBDOMAIN` | Confluence search in the chat |
 | `ATLASSIAN_CLOUD_ID` | the Atlassian Goals connector |
-| `METABASE_URL` + `METABASE_API_KEY` (or username/password) | the Metabase connector |
+| `METABASE_URL` + `METABASE_API_KEY` (or username/password by hand) | Metabase data points; the two named ones are written by Setup → Data points |
 
 Never put any of these in the engine. Never commit `.env`.
 
@@ -159,12 +159,12 @@ What each group needs, in the recommended order for a new job:
 | Add a stakeholder | See section 6. | — |
 | Review cycle | See section 7. | — |
 | Goals | Save the four `ATLASSIAN_*` lines and press *Sync now*, or add a goal by hand. See section 8. | `connectors/atlassian-goals/setup.md` |
-| First data point | Placeholder until Phase 4; skipping it is fine. | `connectors/metabase/setup.md` |
+| Data points | Optionally save `METABASE_URL` + `METABASE_API_KEY` and *Test connection*; define a point (Metabase card, SQLite query or CSV) and put it on a Data Hub tile. See section 9. | `connectors/metabase/setup.md` |
 
 A *Done* meeting-notes item flips to **Needs attention** by itself when the
 `meeting-notes` vital on the Control Tower fails or goes stale, so a broken token shows up
 on the Setup page without anyone checking. The Goals item does the same when its last
-Atlassian sync failed.
+Atlassian sync failed, and the Data points item when any point's last fetch failed.
 
 Daily digest and intel agents are not setup items: the digest runs with
 `python3 tools/daily-digest/digest.py` (or `/daily-digest`); intel agents read
@@ -232,12 +232,60 @@ sync (bad token, wrong subdomain, network) is remembered in `goals.json` and sho
 as **Needs attention** until the next sync succeeds; the board shows the connector's
 message. No goals tool at the new company? Skip the connector and use the form.
 
-Each goal carries an empty `data_point_id`; Phase 4 lets you bind a goal to a Data Hub data
-point so the board can show the measured value next to the target.
+Each goal has a **Data point** select on the board (synced goals too: the binding is the one
+field they accept here). A bound goal shows the data point's latest number beside its
+progress, as `188 users · Weekly signups`; the measure never overwrites `progress`. A goal
+bound to a data point that was deleted reads *no value* until you pick another.
 
 ---
 
-## 9. Daily use
+## 9. Data points
+
+A data point is one named thing to measure: a **source**, a **display**, a **refresh**
+cadence and a **unit**. Definitions live in `<vault>/.ozos/datapoints.json`; each point's
+last value (or last error) is cached in `<vault>/.ozos/datapoint-cache/<id>.json`, which the
+vault's `.gitignore` keeps out of git. Data Hub tiles and goal measures can only show data
+points.
+
+Three sources, each a small object:
+
+| Source | Fields | Notes |
+|---|---|---|
+| Metabase card | `card_id` | Runs the saved question with its default filters. Needs `METABASE_URL` + `METABASE_API_KEY` (or a username/password pair) in the vault `.env`; `connectors/metabase/setup.md`. |
+| SQLite query | `path`, `query` | `path` is relative to the vault and must stay inside it; the file is opened read-only. |
+| CSV file | `path`, optional `column` | First row is the header; numbers are parsed; `column` keeps only that column. Same path rule. |
+
+Three displays: **number** (first cell of the first row, with the unit; when the result has
+a second row it is read as the previous value and shown as a delta), **table** (every column,
+the first 50 rows) and **line** (first column on x, second on y). Rows are capped at 1000 in
+the cache.
+
+Two cadences: **manual** (the tile's refresh icon, or the point's row on Setup) and
+**daily**. Daily points refresh through the `datapoints-refresh` vital, which runs
+`./ozos datapoints refresh` (`--all` refreshes manual points too); run it from the Control
+Tower like any vital, and it shows *STALE* there after 24 hours. Nothing schedules it: a
+vault nobody opens does not refresh.
+
+Where to define one, all writing the same file:
+
+- **Setup → Data points**: *Connect Metabase* (optional; *Save to .env*, then *Test
+  connection*), *Define a data point*, and *Your data points* listing each point with its
+  last fetch or error and a *Delete*.
+- **Data Hub** with no data points yet: *Define your first data point* opens the same form.
+- `/ozos-setup first-data-point` in a Claude Code session.
+
+Then **Data Hub → Add tab** (tabs are typed names; no rename or delete yet, edit
+`datahub.json` by hand), and the tile's `+` lists your data points grouped by source kind.
+Deleting a data point leaves its tiles in place: they read *Data point removed* with a
+*Remove this tile* action.
+
+The item turns *Done* with the first data point of any kind (derived, so it reverts if you
+delete them all). A point whose last fetch failed shows the error on its tile and on Setup,
+and the item reads **Needs attention** until a refresh succeeds.
+
+---
+
+## 10. Daily use
 
 | Do | How |
 |---|---|
@@ -245,21 +293,22 @@ point so the board can show the measured value next to the target.
 | Work the next setup item | `/ozos-setup` in a Claude Code session, or the Setup page |
 | Sync notes from both sources | `/sync-notes` in a Claude Code session |
 | Pull goals from Atlassian again | *Sync Atlassian* on Goals & Tasks, or `/ozos-setup define-goals` |
+| Refresh daily data points | Control Tower → `datapoints-refresh`, or `./ozos datapoints refresh` (`--all` for manual points too) |
 | Save a session summary | `/save-session` (writes to the vault's `docs/learnings.md`) |
 | Commit engine changes | `/git`; the pre-commit gate runs tests and the scrub check |
 | Keep the term list current | add new names, hosts and IDs to `~/.ozos/scrub-terms.txt` the day you learn them |
 
 ---
 
-## 10. What is not here yet
+## 11. What is not here yet
 
-Phases 4 and 5 of the design: data points for the Data Hub (Metabase card, SQL or CSV),
-the goal-to-data-point binding, and the public README. The *First data point* Setup item
-is a placeholder you can skip.
+Phase 5 of the design: the README for strangers, a demo vault for screenshots, and the flip
+to public. Data Hub tabs cannot be renamed or deleted from the page yet (edit
+`<vault>/.ozos/datahub.json`).
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 - **"Gmail not configured" at session start** — expected until the *Gemini notes via Gmail* item in Setup is done.
 - **App shows "NEVER RUN" for a vital** — the vital has not written output into the
@@ -284,6 +333,15 @@ is a placeholder you can skip.
   subdomain). Fix the variable and sync again; the chip recovers by itself.
 - **A synced goal cannot be edited or deleted** — by design; change it in Atlassian and
   sync again. Only goals added by hand are editable in OZOS.
+- **The Data points item says "Needs attention"** — a point's last fetch failed; the item
+  lists the point with its error (`METABASE_URL is not set`, `401`, `403`, `… not found in
+  the vault`, `no such table`). Fix the cause and press the tile's refresh icon.
+- **A tile says "Not fetched yet"** — the point has never been fetched; press its refresh
+  icon, or wait for the daily vital if it is a `daily` point.
+- **The Control Tower does not list `datapoints-refresh`** — the vault predates Phase 4;
+  copy that entry from `vault-template/.ozos/vitals.json` into `<vault>/.ozos/vitals.json`.
+- **A data point path is refused ("must stay inside the vault")** — sqlite and csv files
+  have to live under the vault; copy or symlink the file in and use a relative path.
 
 ---
 
@@ -343,8 +401,9 @@ See `vault-template/people-hub/` for both shapes with a comment on every field.
 
 ### A.5 `.env`
 
-The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBDOMAIN` and
-`ATLASSIAN_CLOUD_ID`. Everything else in section 4 is edited by hand.
+The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBDOMAIN`,
+`ATLASSIAN_CLOUD_ID`, `METABASE_URL` and `METABASE_API_KEY`. Everything else in section 4 is
+edited by hand.
 
 ### A.6 `goals.json`
 
@@ -377,6 +436,59 @@ The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBD
   label such as a quarter from Atlassian).
 - `source` / `external_id`: `manual`, or `atlassian` with the goal's ARI. Synced goals
   are replaced on every sync; only `data_point_id` survives from the previous copy.
-- `data_point_id`: reserved for Phase 4; `null` until a data point is bound.
+- `data_point_id`: the id of a data point (A.7) the goal is measured by, or `null`. The
+  board shows that point's latest number beside the goal; nothing writes `progress` from it.
 - `sync`: `null` until the first sync; `status` `fail` is what turns the Setup item into
   *Needs attention*.
+
+### A.7 `datapoints.json` and the cache
+
+```json
+{
+  "datapoints": [
+    {
+      "id": "weekly-signups",
+      "name": "Weekly signups",
+      "source": { "kind": "metabase", "card_id": 42 },
+      "display": "number",
+      "refresh": "daily",
+      "unit": "users",
+      "created_at": "2026-…"
+    },
+    {
+      "id": "signups-by-week",
+      "name": "Signups by week",
+      "source": { "kind": "csv", "path": "data/signups.csv", "column": null },
+      "display": "line",
+      "refresh": "manual",
+      "unit": "",
+      "created_at": "2026-…"
+    }
+  ]
+}
+```
+
+- `id`: the slug of the name; a renamed point keeps its id (tiles point at it).
+- `source`: `{"kind": "metabase", "card_id": int}`, `{"kind": "sqlite", "path", "query"}` or
+  `{"kind": "csv", "path", "column"}`; paths are relative to the vault and must resolve inside
+  it. Changing the source drops the cached value.
+- `display`: `number`, `table` or `line`; `refresh`: `manual` or `daily`; `unit`: free text.
+- A point with an unknown `display` or `refresh` is read with the default; one with a blank
+  name or an invalid source is ignored.
+
+`.ozos/datapoint-cache/<id>.json` (gitignored by the template) is either
+
+```json
+{ "fetched_at": "2026-…", "columns": ["week", "signups"], "rows": [["2026-W01", 120]] }
+```
+
+or, after a failed fetch,
+
+```json
+{ "fetched_at": "2026-…", "error": "METABASE_URL is not set" }
+```
+
+`GET /api/datapoints/<id>/value` returns `{"id", "fetched_at", "columns", "rows", "error"}`
+with `fetched_at: null` when the point was never fetched. The `datapoints-refresh` vital in
+`vitals.json` watches this folder (`output_glob: "*.json"`, `stale_after_hours: 24`) and runs
+`python3 ozos datapoints refresh`.

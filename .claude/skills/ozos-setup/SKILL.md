@@ -38,7 +38,10 @@ is needed in one line, never ask for something the vault already has.
 Items without a doc (`profile`, `routing-folders`, the four MCP items, the drop folders,
 `add-stakeholder`, `define-cycle`) are explained by their `why` and `writes` fields.
 For `define-goals`, first ask whether the company uses Atlassian Goals at all: if not,
-skip the connector and offer to add the first goal by hand.
+skip the connector and offer to add the first goal by hand. For `first-data-point`, ask
+what the first number should be and where it lives: a Metabase card (needs the two
+`METABASE_*` variables), a SQLite file in the vault, or a CSV in the vault; Metabase is
+optional.
 
 ## 3. Write the vault
 
@@ -58,6 +61,7 @@ curl -sf http://localhost:8765/health
 | routing | `PUT /routing` | `{"folders":[…],"default_folder","tagging_guide"}` (and `drive_parent_folder_id` for gmail-gemini) |
 | env | `PUT /env` | `{"vars":{"ATLASSIAN_EMAIL":…,"ATLASSIAN_TOKEN":…,"ATLASSIAN_SUBDOMAIN":…}}` — plus `ATLASSIAN_CLOUD_ID` for goals; only these names are accepted; values are never echoed back |
 | goals | `PUT /env` then `POST /api/goals/sync` (note: not under `/setup`) | env body as above with all four `ATLASSIAN_*` names; sync has no body and answers `{"synced": N}`; `422 … is not set` names a missing variable, `502` carries the connector's error. To add a goal by hand instead: `POST /api/goals` with `{"title","owner","status","progress","target_date"}` (status ∈ on_track, at_risk, off_track, complete, cancelled, pending) |
+| data | `PUT /env` with `METABASE_URL`, `METABASE_API_KEY`, then `POST /api/datapoints/metabase/test` (not under `/setup`; answers `{"ok": true, "message": "Connected as …"}`, `422` names a missing variable, `502` carries the client's error); define with `POST /api/datapoints` body `{"name","source","display","refresh","unit"}` where `source` is `{"kind":"metabase","card_id":42}`, `{"kind":"sqlite","path","query"}` or `{"kind":"csv","path","column"}` (paths relative to the vault; display ∈ number, table, line; refresh ∈ manual, daily); then `POST /api/datapoints/<id>/refresh` fetches it once (200 with `error` set when the fetch failed) |
 | gmail | `GET /gmail` | shows which of the OAuth client file, the token and the Drive folder exist |
 
 **App not running → call the same code in-process** from the engine root:
@@ -71,7 +75,11 @@ The functions are `add_stakeholder(dict)`, `set_company_cycle(name, type, stages
 default_folder=…, tagging_guide=…, drive_parent_folder_id=…)`, `write_env({NAME: value})`,
 `gmail_status()`; for goals, `from backend.services import goals, goals_sync` then
 `goals_sync.sync_goals()` (pulls Atlassian goals; raises `LookupError` naming a missing
-variable, `RuntimeError` with the connector's message) or `goals.add_goal({'title': …})`.
+variable, `RuntimeError` with the connector's message) or `goals.add_goal({'title': …})`;
+for data points, `from backend.services import datapoints` then
+`datapoints.add_datapoint({'name': …, 'source': {...}, 'display': 'number', 'refresh': 'manual', 'unit': ''})`
+and `datapoints.refresh_datapoint(id)` (returns the cached value; `error` set when the fetch
+failed), or `./ozos datapoints refresh --all` from the engine root.
 Never print a secret back to the user; pass tokens straight through.
 
 **MCP items** (`slack-mcp`, `google-workspace-mcp`, `figma-mcp`, `miro-mcp`) have no
@@ -87,7 +95,8 @@ runs `./ozos init` (or `./ozos init --force` to repoint an existing config).
 
 Items written through the endpoints or the actions above are marked automatically
 (`add-stakeholder`, `define-cycle`, `define-goals`, the folders, `routing-folders`,
-`confluence`). For anything else:
+`confluence`); `first-data-point` is derived: it reads *Done* while `datapoints.json` holds
+at least one point. For anything else:
 
 ```bash
 ./ozos setup mark <item-id> done            # or skipped / in_progress
