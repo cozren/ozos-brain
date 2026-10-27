@@ -14,6 +14,10 @@ vault, keep the engine.
 
 ## Quick start
 
+Starting at a new company? Follow **[docs/SETUP.md](docs/SETUP.md)**, the day-one
+guide: prerequisites, `ozos init`, where the vault lives, connecting each source,
+adding people, and what to do when something is not wired yet.
+
 ```bash
 git clone https://github.com/cozren/ozos-brain.git && cd ozos-brain
 pip3 install -r requirements.txt
