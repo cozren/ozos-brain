@@ -1,11 +1,13 @@
-import type { SetupItem } from '../../types/setup'
+import type { SetupCadence, SetupItem } from '../../types/setup'
 import { api } from '../../api'
 import { StakeholderForm } from './StakeholderForm'
+import { CycleForm } from './CycleForm'
 import { HINT } from './formStyles'
 
 interface Props {
   item: SetupItem
   onChanged: () => void
+  cadence?: SetupCadence | null
 }
 
 // Sub-rows for repeatable items (one line per person added).
@@ -45,7 +47,7 @@ function Rows({ item }: { item: SetupItem }) {
 }
 
 // The per-kind form slot under an item row. Kinds without a form render nothing.
-export function SetupItemBody({ item, onChanged }: Props) {
+export function SetupItemBody({ item, onChanged, cadence }: Props) {
   switch (item.kind) {
     case 'people':
       return (
@@ -59,6 +61,17 @@ export function SetupItemBody({ item, onChanged }: Props) {
             }}
           />
         </div>
+      )
+    case 'cycle':
+      return (
+        <CycleForm
+          cadence={cadence}
+          onSubmit={async (payload) => {
+            const result = await api.setSetupCycle(payload)
+            onChanged()
+            return result
+          }}
+        />
       )
     case 'manual':
       return (

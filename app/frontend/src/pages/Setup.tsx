@@ -107,7 +107,7 @@ export function Setup() {
             >
               {group.items.map((item, i) => (
                 <SetupItemRow key={item.id} item={item} first={i === 0} onStatus={handleStatus}>
-                  <SetupItemBody item={item} onChanged={load} />
+                  <SetupItemBody item={item} onChanged={load} cadence={view.cadence} />
                 </SetupItemRow>
               ))}
             </div>

@@ -32,6 +32,7 @@ import type {
 } from './types/knowledge'
 import type { DataHubLayout } from './types/datahub'
 import type {
+  CyclePayload,
   SetupItem,
   SetupStatus,
   SetupView,
@@ -627,6 +628,16 @@ export const api = {
       body: JSON.stringify(payload),
     }).then((r) => {
       if (!r.ok) throw new Error(`Add stakeholder failed: ${r.status}`)
+      return r.json()
+    }),
+
+  setSetupCycle: (payload: CyclePayload): Promise<unknown> =>
+    fetch(`${BASE}/setup/cycle`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Save cycle failed: ${r.status}`)
       return r.json()
     }),
 

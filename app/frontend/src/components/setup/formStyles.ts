@@ -12,6 +12,7 @@ export const FIELD: CSSProperties = {
   fontSize: 12,
   padding: '7px 10px',
   outline: 'none',
+  colorScheme: 'dark',
   transition: 'border-color 200ms ease, box-shadow 200ms ease',
 }
 
