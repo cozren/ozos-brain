@@ -31,7 +31,13 @@ import type {
   CreateFolderResponse,
 } from './types/knowledge'
 import type { DataHubLayout } from './types/datahub'
-import type { SetupItem, SetupStatus, SetupView } from './types/setup'
+import type {
+  SetupItem,
+  SetupStatus,
+  SetupView,
+  StakeholderPayload,
+  StakeholderResult,
+} from './types/setup'
 
 export interface ChatStreamEvent {
   type: 'text' | 'status' | 'tool_start' | 'tool_done' | 'error' | 'done'
@@ -611,6 +617,16 @@ export const api = {
   dismissSetup: (): Promise<{ badge_dismissed: boolean }> =>
     fetch(`${BASE}/setup/dismiss`, { method: 'POST' }).then((r) => {
       if (!r.ok) throw new Error(`Dismiss setup badge failed: ${r.status}`)
+      return r.json()
+    }),
+
+  addStakeholder: (payload: StakeholderPayload): Promise<StakeholderResult> =>
+    fetch(`${BASE}/setup/people`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Add stakeholder failed: ${r.status}`)
       return r.json()
     }),
 

@@ -105,3 +105,31 @@ test('clicking Skip updates the row from the backend response', async () => {
   await waitFor(() => expect(screen.getByText('Skipped')).toBeInTheDocument())
   expect(api.setSetupStatus).toHaveBeenCalledWith('granola', 'skipped')
 })
+
+test('the people item renders the stakeholder form and its sub-rows', async () => {
+  const withPeople: SetupView = {
+    ...view,
+    groups: [
+      {
+        id: 'people',
+        label: 'People',
+        items: [
+          {
+            ...view.groups[1].items[0],
+            id: 'add-stakeholder',
+            group: 'people',
+            title: 'Add a stakeholder',
+            kind: 'people',
+            status: 'done',
+            rows: [{ id: 'pat', display_name: 'Pat Example', added_at: '2026-01-02T10:00:00' }],
+          },
+        ],
+      },
+    ],
+  }
+  getSetup.mockResolvedValue(withPeople)
+  render(<Setup />)
+  await waitFor(() => expect(screen.getByLabelText('Name')).toBeInTheDocument())
+  expect(screen.getByText('Pat Example')).toBeInTheDocument()
+  expect(screen.getByText('2026-01-02')).toBeInTheDocument()
+})

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ListChecks } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { SetupItemRow } from '../components/setup/SetupItemRow'
+import { SetupItemBody } from '../components/setup/SetupItemBody'
 import { api } from '../api'
 import type { SetupItem, SetupStatus, SetupView } from '../types/setup'
 
@@ -105,7 +106,9 @@ export function Setup() {
               style={{ boxShadow: 'none', border: '1px solid rgba(0,255,255,0.18)' }}
             >
               {group.items.map((item, i) => (
-                <SetupItemRow key={item.id} item={item} first={i === 0} onStatus={handleStatus} />
+                <SetupItemRow key={item.id} item={item} first={i === 0} onStatus={handleStatus}>
+                  <SetupItemBody item={item} onChanged={load} />
+                </SetupItemRow>
               ))}
             </div>
           </section>
