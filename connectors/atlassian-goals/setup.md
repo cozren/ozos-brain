@@ -17,14 +17,12 @@ Phase 3, so the Goals item can stay `skipped` after the connection works.
 - An API token: https://id.atlassian.com/manage-profile/security/api-tokens → *Create
   API token*. Copy it once; Atlassian does not show it again.
 - The **subdomain**: the part before `.atlassian.net` in your site URL.
-- For Goals only: the **cloud id** and **org id**. Open any Jira or Confluence page and run
-  this in the browser console; the response's `cloudId` is what you need:
+- For Goals only: the **cloud id**. Open any Jira or Confluence page and run this in the
+  browser console; the response's `cloudId` is what you need:
 
   ```js
   fetch("/_edge/tenant_info").then(r => r.json()).then(console.log)
   ```
-
-  The org id is in the URL of https://admin.atlassian.com (`/o/<org-id>/...`).
 
 ## Steps
 
@@ -41,12 +39,11 @@ Phase 3, so the Goals item can stay `skipped` after the connection works.
    Without the app, `/ozos-setup` writes the same lines through
    `setup_actions.write_env`, or add them by hand.
 
-2. **Goals** — add the two remaining lines to the vault `.env` by hand (Phase 3 adds the
+2. **Goals** — add the one remaining line to the vault `.env` by hand (Phase 3 adds the
    form):
 
    ```
    ATLASSIAN_CLOUD_ID=...
-   ATLASSIAN_ORG_ID=...
    ```
 
    The engine's project-level `.mcp.json` already registers

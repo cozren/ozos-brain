@@ -113,7 +113,7 @@ enable each source; `<vault>/.env.example` lists them with comments.
 | `ANTHROPIC_API_KEY` | everything that talks to Claude (required) |
 | `OZOS_LLM_BASE_URL`, `OZOS_LLM_MODEL` | optional proxy and model override |
 | `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN`, `ATLASSIAN_SUBDOMAIN` | Confluence search in the chat |
-| `ATLASSIAN_ORG_ID`, `ATLASSIAN_CLOUD_ID` | the Atlassian Goals connector |
+| `ATLASSIAN_CLOUD_ID` | the Atlassian Goals connector |
 | `METABASE_URL` + `METABASE_API_KEY` (or username/password) | the Metabase connector |
 
 Never put any of these in the engine. Never commit `.env`.
@@ -230,7 +230,7 @@ Setup items exist as placeholders you can skip.
 
 ## 10. Troubleshooting
 
-- **"Gmail not configured" at session start** — expected until 5.1 is done.
+- **"Gmail not configured" at session start** — expected until the *Gemini notes via Gmail* item in Setup is done.
 - **App shows "NEVER RUN" for a vital** — the vital has not written output into the
   vault yet; run it once.
 - **Chat says `ANTHROPIC_API_KEY is not set`** — fill it in `<vault>/.env` and
@@ -263,8 +263,9 @@ Everything the Setup page writes can also be edited by hand. The files live in
 }
 ```
 
-Statuses: `not_started`, `in_progress`, `done`, `skipped`; `needs_attention` is derived,
-never stored. `cadence` is `{"mode": "company", "cycle_id": "…"}` or
+Statuses: `not_started`, `in_progress`, `done`, `skipped`, `needs_attention`. The last one
+is normally derived at read time (a done item whose vital failed or went stale) and only
+stored if you set it yourself. `cadence` is `{"mode": "company", "cycle_id": "…"}` or
 `{"mode": "default", …}`. Item ids are listed by `./ozos setup --json`.
 
 ### A.2 `meeting-routing.json` (a commented example sits next to it)
