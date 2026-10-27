@@ -658,7 +658,7 @@ def test_load_graph_projects_fields(tmp_path):
 
 
 def test_load_graph_missing_file_returns_empty(tmp_path):
-    with patch.object(svc, "_ROOT", tmp_path):
+    with patch.object(svc, "_GRAPH_ROOT", tmp_path):
         graph = svc.load_graph()
     assert graph == {"nodes": [], "links": []}
 
