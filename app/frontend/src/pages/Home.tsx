@@ -1,7 +1,30 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { BrainVisual } from '../components/control-tower/BrainVisual'
+import { SetupBadge } from '../components/SetupBadge'
+import { CadenceReminders } from '../components/CadenceReminders'
+import { api } from '../api'
+import type { Page } from '../components/Sidebar'
+import type { Reminder, SetupSummary } from '../types/setup'
 
-export function Home() {
+export function Home({ onNavigate }: { onNavigate?: (page: Page) => void }) {
+  // Setup progress and cadence reminders; both are best-effort and never break Home.
+  const [summary, setSummary] = useState<SetupSummary | null>(null)
+  const [reminders, setReminders] = useState<Reminder[]>([])
+  useEffect(() => {
+    api
+      .getSetup()
+      .then((v) => setSummary(v.summary))
+      .catch(() => setSummary(null))
+    api
+      .getSetupReminders()
+      .then(setReminders)
+      .catch(() => setReminders([]))
+  }, [])
+  const dismiss = () => {
+    setSummary((s) => (s ? { ...s, badge_dismissed: true } : s))
+    api.dismissSetup().catch(() => {})
+  }
+
   // Each time the brain's synaptic pulse finishes glowing, flare the title's neon.
   const [flareKey, setFlareKey] = useState(0)
   const [flaring, setFlaring] = useState(false)
@@ -90,6 +113,19 @@ export function Home() {
           your personal command center
         </p>
       </div>
+
+      {(summary || reminders.length > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          {summary && (
+            <SetupBadge
+              summary={summary}
+              onOpen={() => onNavigate?.('setup')}
+              onDismiss={dismiss}
+            />
+          )}
+          <CadenceReminders reminders={reminders} />
+        </div>
+      )}
     </div>
   )
 }

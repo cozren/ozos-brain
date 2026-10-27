@@ -48,7 +48,7 @@ export default function App() {
         onNavStateChange={setNavState}
       />
       <main style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
-        {page === 'home' && <Home />}
+        {page === 'home' && <Home onNavigate={setPage} />}
         {page === 'setup' && <Setup />}
         {page === 'people-hub' && <PeopleHub />}
         {page === 'control-tower' && <ControlTower />}
