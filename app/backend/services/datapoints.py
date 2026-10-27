@@ -19,6 +19,7 @@ cache.
 from __future__ import annotations
 
 import json
+import math
 import os
 from datetime import datetime
 from pathlib import Path
@@ -247,9 +248,17 @@ def _write_cache(dp_id: str, payload: dict) -> None:
     os.replace(tmp, path)
 
 
+def _json_safe(cell):
+    """NaN and ±inf are not JSON; the API would 500 reading them back."""
+    if isinstance(cell, float) and not math.isfinite(cell):
+        return None
+    return cell
+
+
 def write_rows(dp_id: str, columns: list, rows: list, now: datetime | None = None) -> None:
     stamp = (now or datetime.now()).isoformat(timespec="seconds")
-    _write_cache(dp_id, {"fetched_at": stamp, "columns": list(columns), "rows": list(rows)})
+    safe_rows = [[_json_safe(c) for c in row] for row in rows]
+    _write_cache(dp_id, {"fetched_at": stamp, "columns": list(columns), "rows": safe_rows})
 
 
 def write_error(dp_id: str, message: str, now: datetime | None = None) -> None:

@@ -156,3 +156,25 @@ def test_test_metabase(src_env, monkeypatch):
     monkeypatch.setattr(datapoint_sources, "metabase_client", lambda creds: Bad())
     with pytest.raises(RuntimeError, match="401"):
         check_metabase()
+
+
+def test_fetch_sqlite_refuses_attach_so_nothing_is_written_outside_the_vault(src_env, tmp_path):
+    db = vault_path("data/app.db")
+    db.parent.mkdir(parents=True)
+    sqlite3.connect(db).close()
+    outside = tmp_path / "outside.db"
+    with pytest.raises(RuntimeError, match="not authorized"):
+        fetch(
+            {"kind": "sqlite", "path": "data/app.db", "query": f"attach database '{outside}' as e"}
+        )
+    assert not outside.exists()
+
+
+def test_fetch_csv_non_finite_cells_become_null(src_env):
+    f = vault_path("data/odd.csv")
+    f.parent.mkdir(parents=True)
+    f.write_text("n\nNaN\ninf\n-Infinity\n3\n")
+    assert fetch({"kind": "csv", "path": "data/odd.csv", "column": None}) == (
+        ["n"],
+        [[None], [None], [None], [3]],
+    )

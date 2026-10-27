@@ -118,21 +118,25 @@ export function DataHub() {
     if (active) localStorage.setItem(STORAGE_KEY, active)
   }, [active])
 
-  const addTab = (raw: string) => {
+  // The canvas saves tiles into the same file, so the page re-reads the saved
+  // layout right before adding a tab: writing from its mount-time copy would
+  // drop every tile placed since.
+  const addTab = async (raw: string) => {
     const name = raw.trim()
     if (!layout || !name || name in layout.tabs) return
-    const next: DataHubLayout = {
-      tabs: { ...layout.tabs, [name]: { rows: [] } },
-      pickerFolders: layout.pickerFolders ?? {},
+    try {
+      const fresh = await api.getDataHubLayout().catch(() => layout)
+      const next: DataHubLayout = {
+        tabs: { ...(fresh.tabs ?? {}), [name]: { rows: [] } },
+        pickerFolders: fresh.pickerFolders ?? {},
+      }
+      await api.saveDataHubLayout(next)
+      setLayout(next)
+      setTab(name)
+      setSaveError(false)
+    } catch {
+      setSaveError(true)
     }
-    api.saveDataHubLayout(next).then(
-      () => {
-        setLayout(next)
-        setTab(name)
-        setSaveError(false)
-      },
-      () => setSaveError(true)
-    )
   }
 
   const emptyStyle: React.CSSProperties = {
@@ -253,7 +257,8 @@ export function DataHub() {
             style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}
             className="planner-strip--bar"
           >
-            <DashboardCanvas tabId={active} />
+            {/* keyed so each tab mounts a fresh canvas that reloads the saved layout */}
+            <DashboardCanvas key={active} tabId={active} />
           </section>
         </>
       )}

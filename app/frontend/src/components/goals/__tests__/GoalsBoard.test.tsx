@@ -181,14 +181,13 @@ test('bound goals load their data point value once and show the measure', async 
   })
   render(<GoalsBoard />)
   await screen.findByText('Alpha')
-  await waitFor(() => expect(screen.getAllByTestId('goal-measure')).toHaveLength(2))
+  await waitFor(() => expect(screen.getAllByText('1,234 users · Weekly signups')).toHaveLength(2))
   expect(getDataPointValue).toHaveBeenCalledTimes(1)
   expect(getDataPointValue).toHaveBeenCalledWith('weekly-signups')
-  for (const m of screen.getAllByTestId('goal-measure')) {
-    expect(m).toHaveTextContent('1,234 users · Weekly signups')
-  }
-  // Gamma is bound to a deleted point: no measure, select back on "No data point".
+  // Gamma is bound to a deleted point: it says so; the select is back on "No data point".
   const gamma = screen.getByText('Gamma').closest('[data-goal]') as HTMLElement
-  expect(within(gamma).queryByTestId('goal-measure')).toBeNull()
+  expect(within(gamma).getByTestId('goal-measure')).toHaveTextContent(
+    'no value · removed data point'
+  )
   expect(within(gamma).getByLabelText('Data point')).toHaveValue('')
 })

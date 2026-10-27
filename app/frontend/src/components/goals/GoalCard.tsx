@@ -74,6 +74,8 @@ export function GoalCard({ goal, first = false, onPatch, onDelete, datapoints, m
     goal.data_point_id && datapoints?.some((d) => d.id === goal.data_point_id)
       ? goal.data_point_id
       : ''
+  // Bound to a point that no longer exists: say so instead of showing nothing.
+  const stale = !!goal.data_point_id && !!datapoints && boundId === ''
   const [progressDraft, setProgressDraft] = useState(
     goal.progress === null ? '' : String(goal.progress)
   )
@@ -189,10 +191,16 @@ export function GoalCard({ goal, first = false, onPatch, onDelete, datapoints, m
         ) : (
           goal.progress !== null && <span style={META}>{goal.progress}%</span>
         )}
-        {measure && (
+        {measure ? (
           <span data-testid="goal-measure" style={{ ...META, color: 'var(--neon-cyan)' }}>
             {measureText(measure)}
           </span>
+        ) : (
+          stale && (
+            <span data-testid="goal-measure" style={{ ...META, color: '#F59E0B' }}>
+              no value · removed data point
+            </span>
+          )
         )}
         {goal.owner && <span style={META}>owner {goal.owner}</span>}
         {goal.target_date && <span style={META}>target {goal.target_date}</span>}

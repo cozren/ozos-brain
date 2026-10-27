@@ -14,6 +14,7 @@ environment first (`load_dotenv` would never override a stale value).
 from __future__ import annotations
 
 import csv
+import math
 import os
 import re
 import sqlite3
@@ -108,11 +109,20 @@ def _vault_file(rel: str) -> Path:
     return path
 
 
+def _authorizer(action, *_args) -> int:
+    """Read-only mode blocks writes to the opened file; this blocks ATTACH, which
+    would otherwise create a database file at any path (outside the vault)."""
+    if action == sqlite3.SQLITE_ATTACH:
+        return sqlite3.SQLITE_DENY
+    return sqlite3.SQLITE_OK
+
+
 def fetch_sqlite(source: dict) -> tuple[list[str], list[list]]:
     path = _vault_file(source["path"])
     try:
         con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
         try:
+            con.set_authorizer(_authorizer)
             cur = con.execute(source["query"])
             columns = [str(d[0]) for d in (cur.description or [])]
             rows = [list(r) for r in cur.fetchmany(ROW_CAP)]
@@ -134,9 +144,11 @@ def coerce(cell: str):
     if _INT_RE.match(text):
         return int(text)
     try:
-        return float(text)
+        number = float(text)
     except ValueError:
         return text
+    # NaN/inf cannot travel through JSON; a blank is what the user sees anyway.
+    return number if math.isfinite(number) else None
 
 
 def fetch_csv(source: dict) -> tuple[list[str], list[list]]:

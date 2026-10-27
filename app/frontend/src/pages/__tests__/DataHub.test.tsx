@@ -14,10 +14,20 @@ vi.mock('../../api', () => ({
   ApiError: class ApiError extends Error {},
 }))
 
-// Stub the canvas: report which tab it was handed.
-vi.mock('../../components/datahub/DashboardCanvas', () => ({
-  DashboardCanvas: ({ tabId }: { tabId: string }) => <div>canvas:{tabId}</div>,
-}))
+// Stub the canvas: report which tab it was handed and every mount (the page
+// must remount it per tab so it reloads the saved layout).
+const mounts: string[] = []
+vi.mock('../../components/datahub/DashboardCanvas', async () => {
+  const { useEffect } = await import('react')
+  return {
+    DashboardCanvas: ({ tabId }: { tabId: string }) => {
+      useEffect(() => {
+        mounts.push(tabId)
+      }, [tabId])
+      return <div>canvas:{tabId}</div>
+    },
+  }
+})
 
 async function importApi() {
   const mod = await import('../../api')
@@ -44,6 +54,7 @@ const points = (datapoints: DataPoint[]) => ({
 
 beforeEach(async () => {
   localStorage.clear()
+  mounts.length = 0
   const api = await importApi()
   api.getDataPoints.mockReset().mockResolvedValue(points([]))
   api.saveDataHubLayout.mockReset()
@@ -124,4 +135,44 @@ describe('DataHub', () => {
     render(<DataHub />)
     expect(await screen.findByText(/no data points yet/i)).toBeInTheDocument()
   })
+})
+
+test('Add tab re-reads the saved layout first, so a tile the canvas saved survives', async () => {
+  const api = await importApi()
+  const tile = { i: 't1', refId: 'weekly-signups', w: 6, h: 10 }
+  api.getDataHubLayout
+    .mockResolvedValueOnce({ tabs: { growth: { rows: [] } }, pickerFolders: {} })
+    .mockResolvedValueOnce({
+      tabs: { growth: { rows: [{ id: 'row-1', tiles: [tile] }] } },
+      pickerFolders: { CSV: [] },
+    })
+  api.saveDataHubLayout.mockImplementation((l) => Promise.resolve(l))
+  render(<DataHub />)
+  await screen.findByRole('tab', { name: /^growth$/i })
+  await userEvent.click(screen.getByRole('button', { name: 'Add tab' }))
+  await userEvent.type(screen.getByLabelText('Tab name'), 'retention{Enter}')
+  await waitFor(() => expect(api.saveDataHubLayout).toHaveBeenCalledTimes(1))
+  expect(api.saveDataHubLayout.mock.calls[0][0]).toEqual({
+    tabs: { growth: { rows: [{ id: 'row-1', tiles: [tile] }] }, retention: { rows: [] } },
+    pickerFolders: { CSV: [] },
+  })
+  expect(await screen.findByRole('tab', { name: /^retention$/i })).toHaveAttribute(
+    'aria-selected',
+    'true'
+  )
+})
+
+test('switching tabs remounts the canvas so it reloads the layout', async () => {
+  const api = await importApi()
+  api.getDataHubLayout.mockResolvedValue({
+    tabs: { growth: { rows: [] }, retention: { rows: [] } },
+    pickerFolders: {},
+  })
+  render(<DataHub />)
+  await screen.findByText('canvas:growth')
+  await userEvent.click(screen.getByRole('tab', { name: /^retention$/i }))
+  await screen.findByText('canvas:retention')
+  await userEvent.click(screen.getByRole('tab', { name: /^growth$/i }))
+  await screen.findByText('canvas:growth')
+  expect(mounts).toEqual(['growth', 'retention', 'growth'])
 })

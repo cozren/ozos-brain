@@ -177,3 +177,11 @@ def test_refresh_writes_rows_or_error_and_refresh_all_filters_daily(dp_env, monk
     assert refresh_all(daily_only=True) == {"refreshed": 1, "failed": []}
     assert calls == ["a.csv"]
     assert refresh_all() == {"refreshed": 1, "failed": ["b"]}
+
+
+def test_cache_never_holds_non_finite_numbers(dp_env):
+    write_rows("a", ["n", "label"], [[float("nan"), "x"], [float("inf"), 1.5]])
+    assert read_value("a")["rows"] == [[None, "x"], [None, 1.5]]
+    assert (
+        "NaN" not in cache_path("a").read_text() and "Infinity" not in cache_path("a").read_text()
+    )

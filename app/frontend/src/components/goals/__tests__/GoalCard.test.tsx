@@ -153,3 +153,16 @@ test('an errored or never-fetched measure reads "no value"', () => {
   )
   expect(screen.getByTestId('goal-measure')).toHaveTextContent('no value')
 })
+
+test('a goal bound to a data point that no longer exists still says so', () => {
+  render(
+    <GoalCard
+      goal={{ ...base, data_point_id: 'gone' }}
+      onPatch={vi.fn()}
+      onDelete={vi.fn()}
+      datapoints={[POINT]}
+    />
+  )
+  expect(screen.getByTestId('goal-measure')).toHaveTextContent('no value · removed data point')
+  expect(screen.getByLabelText('Data point')).toHaveValue('')
+})
