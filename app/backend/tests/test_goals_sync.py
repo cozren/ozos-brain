@@ -69,6 +69,11 @@ def test_map_remote_goal():
     assert g["owner"] == "Pat" and g["target_date"] == "Q4" and g["source"] == "atlassian"
     odd = map_remote_goal({"id": "ari:goal/Z", "name": "Odd", "status": {"value": "archived"}})
     assert odd["status"] == "pending" and odd["progress"] is None and odd["owner"] == ""
+    # Atlassian's read-side spellings are aliased onto the engine vocabulary.
+    done = map_remote_goal({"id": "ari:goal/D", "name": "Done", "status": {"value": "COMPLETED"}})
+    assert done["status"] == "complete"
+    paused = map_remote_goal({"id": "ari:goal/P", "name": "P", "status": {"value": "paused"}})
+    assert paused["status"] == "pending"
 
 
 def test_sync_without_credentials_writes_nothing(env_file, goals_file):
@@ -116,3 +121,35 @@ def test_fetch_remote_parses_connector_result(monkeypatch):
     monkeypatch.setattr(api_client.AtlassianGoalsClient, "list_goals", err)
     with pytest.raises(RuntimeError, match="404"):
         fetch_remote(creds)
+
+
+def test_sync_records_failure_when_a_remote_goal_cannot_be_mapped(
+    env_file, goals_file, monkeypatch
+):
+    env_file.write_text("\n".join(f"{n}=x" for n in ENV_NAMES) + "\n")
+    goals.add_goal({"title": "Keep me"})
+    monkeypatch.setattr(
+        goals_sync,
+        "fetch_remote",
+        lambda creds: [
+            {"id": "ari:goal/1", "name": "Fine", "status": {"value": "on_track"}},
+            {"id": "ari:goal/2", "name": None},
+        ],
+    )
+    with pytest.raises(RuntimeError, match="title is required"):
+        sync_goals()
+    state = load_goals()
+    assert state["sync"]["status"] == "fail"
+    assert [g["id"] for g in state["goals"]] == ["keep-me"]
+
+
+def test_fetch_remote_rejects_a_non_list_payload(monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT / "connectors" / "atlassian-goals"))
+    api_client = importlib.import_module("api_client")
+
+    async def odd(self, status=None, limit=50):
+        return "{}"
+
+    monkeypatch.setattr(api_client.AtlassianGoalsClient, "list_goals", odd)
+    with pytest.raises(RuntimeError, match="expected a list"):
+        fetch_remote({n: "x" for n in ENV_NAMES})

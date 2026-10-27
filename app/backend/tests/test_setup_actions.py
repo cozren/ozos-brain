@@ -225,10 +225,15 @@ def test_env_write_whitelist_and_no_echo(vault):
         "ATLASSIAN_CLOUD_ID": False,
     }
     assert load_state()["items"]["confluence"]["status"] == "done"
-    # Goals needs the cloud id too, so the Confluence trio alone leaves it open.
+    # Saving credentials never marks Goals done: only the first goal or the first
+    # successful sync does (see goals.add_goal / goals.replace_synced).
     assert load_state()["items"]["define-goals"]["status"] == "not_started"
     write_env({"ATLASSIAN_CLOUD_ID": "cid"})
-    assert load_state()["items"]["define-goals"]["status"] == "done"
+    assert env_status()["ATLASSIAN_CLOUD_ID"] is True
+    assert load_state()["items"]["define-goals"]["status"] == "not_started"
+    setup_state.set_status("define-goals", "skipped")
+    write_env({"ATLASSIAN_CLOUD_ID": "cid2"})
+    assert load_state()["items"]["define-goals"]["status"] == "skipped"
     with pytest.raises(ValueError):
         write_env({"ANTHROPIC_API_KEY": "x"})
     with pytest.raises(ValueError):

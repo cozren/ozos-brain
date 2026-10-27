@@ -26,6 +26,8 @@ ENV_FILE: Path = setup_actions.ENV_FILE  # tests monkeypatch this
 CONNECTOR_DIR = REPO_ROOT / "connectors" / "atlassian-goals"
 SOURCE = "atlassian"
 FETCH_LIMIT = 200
+# Spellings seen on the read side that differ from the connector's write vocabulary.
+STATUS_ALIASES = {"completed": "complete", "paused": "pending"}
 
 
 def credentials() -> tuple[dict[str, str], list[str]]:
@@ -65,12 +67,15 @@ def fetch_remote(creds: dict[str, str]) -> list[dict]:
     if result.startswith("Error:"):
         raise RuntimeError(result)
     nodes = json.loads(result)
+    if not isinstance(nodes, list):
+        raise RuntimeError("Error: expected a list of goals from the connector")
     return [n for n in nodes if isinstance(n, dict)]
 
 
 def map_remote_goal(node: dict) -> dict:
     external_id = str(node.get("id") or "")
     status = str(((node.get("status") or {}).get("value")) or "").lower()
+    status = STATUS_ALIASES.get(status, status)
     percentage = (node.get("progress") or {}).get("percentage")
     return goals.normalize_goal(
         {
@@ -92,10 +97,13 @@ def sync_goals(now: datetime | None = None) -> dict:
     creds, missing = credentials()
     if missing:
         raise LookupError(f"{missing[0]} is not set")
+    # Fetching and mapping both count as "the pull": any failure is recorded so the
+    # Setup item can show needs_attention, and nothing in goals.json is replaced.
     try:
         nodes = fetch_remote(creds)
+        mapped = [map_remote_goal(n) for n in nodes]
     except Exception as exc:
         goals.record_sync_failure(str(exc), now)
         raise RuntimeError(str(exc)) from exc
-    state = goals.replace_synced([map_remote_goal(n) for n in nodes], SOURCE, now)
-    return {"synced": len(nodes), "sync": state["sync"]}
+    state = goals.replace_synced(mapped, SOURCE, now)
+    return {"synced": len(mapped), "sync": state["sync"]}

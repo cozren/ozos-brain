@@ -349,7 +349,9 @@ def write_env(vars: dict[str, str]) -> list[str]:
         written.append(name)
     _write_private_atomic(ENV_FILE, "\n".join(lines) + "\n")
     status = env_status()
-    for it in (i for i in ITEMS if set(i["env"]) & set(written)):
+    # Only items whose whole job is the credentials (kind "env") are done once they
+    # are all set; an item like Goals marks itself on its first goal or first sync.
+    for it in (i for i in ITEMS if i["kind"] == "env" and set(i["env"]) & set(written)):
         if all(status.get(n) for n in it["env"]):
             setup_state.set_status(it["id"], "done")
     return written

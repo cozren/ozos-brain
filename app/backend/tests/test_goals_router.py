@@ -77,6 +77,9 @@ def test_sync_endpoint_422_without_credentials_and_502_on_remote_error(env, monk
     r = client.post("/api/goals/sync")
     assert r.status_code == 502 and "Authentication failed" in r.json()["detail"]
     assert client.get("/api/goals").json()["sync"]["status"] == "fail"
+    monkeypatch.setattr(goals_sync, "fetch_remote", lambda c: [{"id": "ari:goal/2", "name": ""}])
+    r = client.post("/api/goals/sync")
+    assert r.status_code == 502 and "title is required" in r.json()["detail"]
     monkeypatch.setattr(
         goals_sync,
         "fetch_remote",
