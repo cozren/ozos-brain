@@ -1,1 +1,91 @@
-{"items": {}}
+{
+  "items": {
+    "profile": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "gmail-gemini": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "granola": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "routing-folders": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "slack-mcp": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "google-workspace-mcp": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "figma-mcp": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "miro-mcp": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "confluence": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "notion-or-wiki-drop-folder": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "pdf-drop-folder": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "add-stakeholder": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "define-cycle": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "define-goals": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "first-data-point": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "interviews-folder": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    },
+    "surveys-folder": {
+      "status": "not_started",
+      "updated_at": null,
+      "notes": ""
+    }
+  },
+  "badge_dismissed": false,
+  "cadence": null
+}

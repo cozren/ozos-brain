@@ -1,0 +1,87 @@
+"""The setup journal's item registry is declarative data the app, the CLI and the
+skill all read. Ids and group order are fixed by the Phase 2 brief."""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+from backend.services.setup_registry import GROUPS, ITEM_IDS, ITEMS, STATUSES, item
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_item_ids_and_group_order():
+    assert [g for g, _ in GROUPS] == [
+        "you",
+        "meeting-notes",
+        "workspace",
+        "boards",
+        "documentation",
+        "people",
+        "review-cycle",
+        "goals",
+        "data",
+        "insights",
+    ]
+    assert ITEM_IDS == [
+        "profile",
+        "gmail-gemini",
+        "granola",
+        "routing-folders",
+        "slack-mcp",
+        "google-workspace-mcp",
+        "figma-mcp",
+        "miro-mcp",
+        "confluence",
+        "notion-or-wiki-drop-folder",
+        "pdf-drop-folder",
+        "add-stakeholder",
+        "define-cycle",
+        "define-goals",
+        "first-data-point",
+        "interviews-folder",
+        "surveys-folder",
+    ]
+    assert STATUSES == ("not_started", "in_progress", "done", "skipped", "needs_attention")
+
+
+def test_every_item_belongs_to_a_group_and_has_copy():
+    groups = {g for g, _ in GROUPS}
+    for it in ITEMS:
+        assert it["group"] in groups, it["id"]
+        assert it["title"] and it["why"] and it["kind"] and it["writes"], it["id"]
+        for key in ("setup_doc", "vital", "env", "mcp_match", "default_folder"):
+            assert key in it, (it["id"], key)
+    assert item("granola")["vital"] == "meeting-notes"
+    assert item("confluence")["env"] == [
+        "ATLASSIAN_EMAIL",
+        "ATLASSIAN_TOKEN",
+        "ATLASSIAN_SUBDOMAIN",
+    ]
+    assert item("slack-mcp")["mcp_match"] == "slack"
+    assert item("pdf-drop-folder")["default_folder"] == "pdfs"
+    assert item("nope") is None
+
+
+def test_vault_template_lists_every_item_not_started():
+    tpl = json.loads((REPO_ROOT / "vault-template" / ".ozos" / "setup.json").read_text())
+    assert set(tpl["items"]) == set(ITEM_IDS)
+    assert {v["status"] for v in tpl["items"].values()} == {"not_started"}
+    assert tpl["badge_dismissed"] is False
+    assert tpl["cadence"] is None
+
+
+def test_registry_is_importable_without_app_config():
+    """The CLI imports the registry without loading the app config (which reads the
+    real vault and .env)."""
+    code = (
+        "import sys; sys.path.insert(0, 'app'); "
+        "import backend.services.setup_registry as r; "
+        "assert 'backend.config' not in sys.modules; print(len(r.ITEMS))"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code], cwd=REPO_ROOT, capture_output=True, text=True
+    )
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.strip() == "17"
