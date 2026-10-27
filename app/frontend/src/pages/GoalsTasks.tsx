@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Target } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { PersonalTasks } from '../components/PersonalTasks'
+import { GoalsBoard } from '../components/goals/GoalsBoard'
 
 type View = 'goals' | 'personal'
 
@@ -71,9 +72,6 @@ function BigSwitch({ view, onChange }: { view: View; onChange: (v: View) => void
   )
 }
 
-const GOALS_EMPTY_COPY =
-  'No goals defined yet. Goals are set up from Setup (coming in a later phase).'
-
 export function GoalsTasks() {
   const [view, setView] = useState<View>('goals')
 
@@ -81,27 +79,15 @@ export function GoalsTasks() {
     <div style={{ minHeight: '100vh', paddingBottom: 90 }}>
       <PageHeader
         title="Goals & Tasks"
-        subtitle="Goals and personal tasks."
+        subtitle="Goals by hand or from Atlassian, and your personal tasks."
         icon={<Target size={44} strokeWidth={1.5} />}
       />
       <div style={{ padding: '6px 30px 0' }}>
         <BigSwitch view={view} onChange={setView} />
         {view === 'goals' ? (
-          <section
-            aria-label="Goals empty state"
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              padding: '60px 20px',
-              color: 'var(--text-dim)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 13,
-              letterSpacing: 0.5,
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ maxWidth: 480 }}>{GOALS_EMPTY_COPY}</p>
-          </section>
+          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <GoalsBoard />
+          </div>
         ) : (
           <PersonalTasks />
         )}

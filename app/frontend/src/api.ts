@@ -31,6 +31,7 @@ import type {
   CreateFolderResponse,
 } from './types/knowledge'
 import type { DataHubLayout } from './types/datahub'
+import type { Goal, GoalPatch, GoalsPayload, NewGoalPayload, SyncResult } from './types/goals'
 import type {
   CyclePayload,
   GmailStatus,
@@ -722,6 +723,41 @@ export const api = {
       if (!r.ok) throw new Error(`Load reminders failed: ${r.status}`)
       return r.json()
     }),
+
+  // ── Goals ───────────────────────────────────────────────────────────
+  getGoals: (): Promise<GoalsPayload> =>
+    fetch(`${BASE}/goals`).then((r) => {
+      if (!r.ok) throw new Error(`Load goals failed: ${r.status}`)
+      return r.json()
+    }),
+
+  addGoal: (payload: NewGoalPayload): Promise<Goal> =>
+    fetch(`${BASE}/goals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((r) => throwIfNotOk(r, 'Add goal'))
+      .then((r) => r.json()),
+
+  updateGoal: (id: string, patch: GoalPatch): Promise<Goal> =>
+    fetch(`${BASE}/goals/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+      .then((r) => throwIfNotOk(r, 'Update goal'))
+      .then((r) => r.json()),
+
+  deleteGoal: (id: string): Promise<{ deleted: string }> =>
+    fetch(`${BASE}/goals/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .then((r) => throwIfNotOk(r, 'Delete goal'))
+      .then((r) => r.json()),
+
+  syncGoals: (): Promise<SyncResult> =>
+    fetch(`${BASE}/goals/sync`, { method: 'POST' })
+      .then((r) => throwIfNotOk(r, 'Sync goals'))
+      .then((r) => r.json()),
 
   getDataHubLayout: (): Promise<DataHubLayout> =>
     fetch(`${BASE}/datahub/layout`).then((r) => {
