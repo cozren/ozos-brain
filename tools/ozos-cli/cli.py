@@ -1,6 +1,8 @@
 """`ozos` — set up and check an OZOS engine + vault.
 
     ozos init          create a vault from vault-template/, write ~/.ozos/config.json and the vault .env
+    ozos setup         print the setup journal (what is connected, what is left); --json for scripts
+    ozos setup mark    ozos setup mark <item> <status> [--notes TEXT]
     ozos scrub-check   fail if any forbidden term (company names, people, hosts, ids) is in the engine tree
 
 Run through the `ozos` shim at the engine root. No dependencies beyond the stdlib.
@@ -14,9 +16,13 @@ import json
 import os
 import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ENGINE_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ENGINE_ROOT / "skills"))
+import ozos_vault  # noqa: E402
+
 TEMPLATE = ENGINE_ROOT / "vault-template"
 HOME = Path.home()  # monkeypatched in tests
 DEFAULT_MODEL = "claude-sonnet-5-5"
@@ -153,6 +159,114 @@ def init(args: argparse.Namespace) -> int:
     return 0
 
 
+# ── setup ───────────────────────────────────────────────────────────────────
+#
+# The item list is the app's registry (pure data, no app config import). The
+# state file is read and written here with the same tolerant shape the app uses;
+# derived states (profile, MCP, needs_attention) are the app's business.
+
+
+def _registry():
+    sys.path.insert(0, str(ENGINE_ROOT / "app"))
+    from backend.services import setup_registry  # noqa: E402
+
+    return setup_registry
+
+
+def _setup_file(vault: Path) -> Path:
+    return vault / ".ozos" / "setup.json"
+
+
+def read_setup_state(vault: Path) -> dict:
+    """{"items": {id: {status, updated_at, notes, ...}}, "badge_dismissed", "cadence"} —
+    every registry item present, missing or malformed file tolerated."""
+    reg = _registry()
+    raw: dict = {}
+    try:
+        loaded = json.loads(_setup_file(vault).read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            raw = loaded
+    except (OSError, ValueError):
+        raw = {}
+    stored = raw.get("items") if isinstance(raw.get("items"), dict) else {}
+    items = {}
+    for item_id in reg.ITEM_IDS:
+        entry = {"status": "not_started", "updated_at": None, "notes": ""}
+        got = stored.get(item_id)
+        if isinstance(got, dict):
+            entry.update({k: v for k, v in got.items() if k in ("updated_at", "notes", "rows")})
+            if got.get("status") in reg.STATUSES:
+                entry["status"] = got["status"]
+        items[item_id] = entry
+    return {
+        "items": items,
+        "badge_dismissed": bool(raw.get("badge_dismissed", False)),
+        "cadence": raw.get("cadence") if isinstance(raw.get("cadence"), dict) else None,
+    }
+
+
+def setup_view(vault: Path) -> dict:
+    reg = _registry()
+    state = read_setup_state(vault)
+    groups = []
+    for gid, label in reg.GROUPS:
+        items = [{**it, **state["items"][it["id"]]} for it in reg.ITEMS if it["group"] == gid]
+        groups.append({"id": gid, "label": label, "items": items})
+    statuses = [e["status"] for e in state["items"].values()]
+    done = statuses.count("done")
+    skipped = statuses.count("skipped")
+    return {
+        "groups": groups,
+        "summary": {"done": done, "total": len(statuses), "open": len(statuses) - done - skipped},
+        "cadence": state["cadence"],
+    }
+
+
+def mark_setup_item(vault: Path, item_id: str, status: str, notes: str | None = None) -> dict:
+    reg = _registry()
+    if item_id not in reg.ITEM_IDS:
+        raise KeyError(item_id)
+    if status not in reg.STATUSES:
+        raise ValueError(status)
+    state = read_setup_state(vault)
+    entry = state["items"][item_id]
+    entry["status"] = status
+    entry["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    if notes is not None:
+        entry["notes"] = notes
+    path = _setup_file(vault)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+    return entry
+
+
+def setup_cmd(args: argparse.Namespace) -> int:
+    vault = ozos_vault.vault_dir(ENGINE_ROOT, home=HOME)
+    if args.setup_cmd == "mark":
+        try:
+            entry = mark_setup_item(vault, args.item, args.status, args.notes)
+        except KeyError:
+            print(f"ozos setup: unknown item '{args.item}'", file=sys.stderr)
+            return 1
+        except ValueError:
+            print(f"ozos setup: unknown status '{args.status}'", file=sys.stderr)
+            return 1
+        print(f"{args.item}: {entry['status']}")
+        return 0
+    view = setup_view(vault)
+    if args.json:
+        print(json.dumps(view, indent=2))
+        return 0
+    print(f"Setup journal — {vault}")
+    for group in view["groups"]:
+        print(f"\n{group['label']}")
+        for it in group["items"]:
+            print(f"  [{it['status']}] {it['title']}")
+    s = view["summary"]
+    print(f"\n{s['done']} of {s['total']} done, {s['open']} open")
+    return 0
+
+
 # ── scrub-check ─────────────────────────────────────────────────────────────
 
 
@@ -235,6 +349,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--scrub-terms", default="", help="copy this term list to ~/.ozos/scrub-terms.txt"
     )
     i.set_defaults(func=init)
+
+    st = sub.add_parser("setup", help="print the setup journal; `setup mark` writes one status")
+    st.add_argument("--json", action="store_true", help="machine-readable output")
+    st_sub = st.add_subparsers(dest="setup_cmd")
+    mk = st_sub.add_parser("mark", help="set one item's status")
+    mk.add_argument("item")
+    mk.add_argument("status")
+    mk.add_argument("--notes", default=None)
+    st.set_defaults(func=setup_cmd)
 
     s = sub.add_parser("scrub-check", help="fail if forbidden terms appear in the engine tree")
     s.add_argument("--terms", default=str(HOME / ".ozos" / "scrub-terms.txt"))
