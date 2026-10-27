@@ -15,7 +15,7 @@ import pytest
 
 CURRENT_FILE = Path(__file__).resolve()
 PROJECT_ROOT = CURRENT_FILE.parents[3]
-TOOL_DIR = PROJECT_ROOT / "tools" / "metabase"
+TOOL_DIR = PROJECT_ROOT / "connectors" / "metabase"
 if str(TOOL_DIR) not in sys.path:
     sys.path.insert(0, str(TOOL_DIR))
 
@@ -27,7 +27,7 @@ def _fresh_client_module(monkeypatch):
     import client as client_mod  # type: ignore[import]
 
     importlib.reload(client_mod)
-    monkeypatch.setattr(client_mod, "load_dotenv", lambda: None)
+    monkeypatch.setattr(client_mod, "load_dotenv", lambda *a, **k: None)
     return client_mod
 
 

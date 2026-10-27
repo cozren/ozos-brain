@@ -8,13 +8,18 @@ from mcp.server.fastmcp import FastMCP
 
 from api_client import AtlassianGoalsClient
 
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
+# Credentials live in the vault .env (never in the engine checkout).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skills"))
+import ozos_vault  # noqa: E402
+
+VAULT_ENV = ozos_vault.vault_dir() / ".env"
+load_dotenv(VAULT_ENV)
 
 
 def _require(name: str) -> str:
     val = os.getenv(name)
     if not val:
-        print(f"ERROR: {name} not set. Add it to the project root .env", file=sys.stderr)
+        print(f"ERROR: {name} not set. Add it to the vault .env ({VAULT_ENV})", file=sys.stderr)
         sys.exit(1)
     return val
 

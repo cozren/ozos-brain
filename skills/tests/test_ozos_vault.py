@@ -40,6 +40,8 @@ def test_tools_use_the_shared_resolver():
         "tools/chatgpt-import/convert.py",
         "tools/youtube-xray/xray_single.py",
         "skills/ozos_llm.py",
+        "connectors/atlassian-goals/server.py",
+        "connectors/metabase/client.py",
     ):
         text = (root / rel).read_text(encoding="utf-8")
         assert "ozos_vault" in text, rel
@@ -76,3 +78,12 @@ def test_app_backend_uses_the_shared_lookup_order():
     text = (root / "app" / "backend" / "vault.py").read_text(encoding="utf-8")
     assert "vault_candidate" in text
     assert 'env.get("OZOS_VAULT")' not in text
+
+
+def test_connectors_read_the_vault_env_not_the_engine_root():
+    root = Path(__file__).resolve().parents[2]
+    server = (root / "connectors/atlassian-goals/server.py").read_text(encoding="utf-8")
+    client = (root / "connectors/metabase/client.py").read_text(encoding="utf-8")
+    assert 'parent.parent.parent / ".env"' not in server
+    assert "project root .env" not in server
+    assert "load_dotenv()" not in client

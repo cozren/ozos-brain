@@ -85,3 +85,21 @@ def test_registry_is_importable_without_app_config():
     )
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == "17"
+
+
+_DOC_HEADINGS = ["## What it gives you", "## What you need", "## Steps", "## How to verify"]
+
+
+def test_setup_docs_exist_with_the_four_sections():
+    docs = sorted({it["setup_doc"] for it in ITEMS if it["setup_doc"]})
+    assert docs == [
+        "connectors/atlassian-goals/setup.md",
+        "connectors/metabase/setup.md",
+        "docs/connectors/gmail-gemini-notes.md",
+        "docs/connectors/granola.md",
+    ]
+    for rel in docs:
+        text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+        positions = [text.find(h) for h in _DOC_HEADINGS]
+        assert all(p >= 0 for p in positions), (rel, positions)
+        assert positions == sorted(positions), rel

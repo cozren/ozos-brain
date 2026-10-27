@@ -18,12 +18,12 @@ Uses the Atlassian GraphQL gateway at `https://{subdomain}.atlassian.net/gateway
 
 ```bash
 cd <engine-root>
-pip install -r tools/atlassian-goals-mcp/requirements.txt
+pip install -r connectors/atlassian-goals/requirements.txt
 ```
 
-### 2. Add credentials to the project root `.env`
+### 2. Add credentials to the vault `.env`
 
-The server reads the vault `.env`. Add these lines (plus `ATLASSIAN_TOKEN`):
+The server reads `<vault>/.env` (the Setup page's Confluence item writes the first three). Add these lines (plus `ATLASSIAN_TOKEN`):
 
 ```
 ATLASSIAN_EMAIL=you@yourcompany.com
@@ -40,7 +40,7 @@ fetch("/rest/api/3/serverInfo").then(r => r.json()).then(d => console.log(d.base
 
 ### 3. Add to Claude Code
 
-Create `~/.claude/.mcp.json` (user-level, applies to all sessions):
+The engine ships a project-level `.mcp.json` that registers this server for sessions opened in the engine checkout. For a user-level registration instead, create `~/.claude/.mcp.json`:
 
 ```bash
 cat > ~/.claude/.mcp.json << 'EOF'
@@ -99,4 +99,4 @@ Usually a bad goal ID or a field that requires Atlas to be enabled. Check the er
 Restart Claude Code after creating/editing `~/.claude/.mcp.json`. Validate JSON syntax (no trailing commas).
 
 **"ATLASSIAN_SUBDOMAIN not set"**
-Add `ATLASSIAN_SUBDOMAIN=yoursubdomain` to the project root `.env`.
+Add `ATLASSIAN_SUBDOMAIN=yoursubdomain` to the vault `.env`.

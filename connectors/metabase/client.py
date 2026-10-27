@@ -15,20 +15,30 @@ Auth precedence:
 
 import os
 import re
+import sys
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
+
+# Credentials live in the vault .env (never in the engine checkout).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skills"))
+import ozos_vault  # noqa: E402
+
+
+def vault_env_path() -> Path:
+    return ozos_vault.vault_dir() / ".env"
 
 
 class MetabaseClient:
     """Read-only, dashboard-scoped HTTP client for Metabase."""
 
     def __init__(self):
-        load_dotenv()
+        load_dotenv(vault_env_path())
         base_url = os.getenv("METABASE_URL")
         if not base_url:
             raise ValueError(
-                "METABASE_URL is not set. Add it to your .env file "
+                "METABASE_URL is not set. Add it to the vault .env "
                 "(just the host, e.g. https://metabase.example.com)."
             )
         self.base_url = base_url.rstrip("/")

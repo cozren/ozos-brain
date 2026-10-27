@@ -4,7 +4,7 @@ Direct, **read-only** Metabase REST client. It only reads a dashboard you point
 it at and the result rows of the cards on that dashboard — no database, schema,
 or collection browsing.
 
-## Configuration (`.env`)
+## Configuration (vault `.env`)
 
 ```
 METABASE_URL=https://your-metabase-host        # host only, no path
@@ -42,5 +42,5 @@ Per-card dashboard parameters (date ranges, currency, etc.) are passed via
 ## Tests
 
 ```bash
-python3 -m pytest tools/metabase/tests/ -q
+python3 -m pytest connectors/metabase/tests/ -q
 ```
