@@ -23,6 +23,7 @@ git clone https://github.com/cozren/ozos-brain.git && cd ozos-brain
 pip3 install -r requirements.txt
 (cd app/frontend && npm ci)
 ./ozos init                 # creates vault/ from vault-template/, writes ~/.ozos/config.json and vault/.env
+./ozos setup                # the onboarding checklist in the terminal (the app has it as the Setup page)
 bash tools/test-pipeline/hooks/install.sh   # pre-commit: tests + scrub check
 bash app/run.sh             # backend :8765, frontend :5173, opens the app
 ```
@@ -48,7 +49,7 @@ tools/            generic tools (meeting-notes, daily-digest, intel-agents, yout
 connectors/       optional clients a vault can enable (metabase, atlassian-goals)
 skills/           shared Python (ozos_llm.py, run_log.py) and Claude skills
 vault-template/   seed for a new vault
-docs/             engine specs and plans
+docs/             engine specs and plans; docs/connectors/ holds per-source setup guides
 ```
 
 ## Tests and formatting
@@ -66,9 +67,11 @@ uncollected tests, and any forbidden term found by `./ozos scrub-check`.
 
 ## Status
 
-Phase 1 of the extraction: the engine runs against an empty vault with Data Hub and
-Goals as empty states. Next up: the setup journal (a living checklist for connecting
-sources and adding stakeholders), review-cycle setup, goals, and data points.
+Phase 2 of the extraction is in: the engine runs against an empty vault and the
+**Setup page** (plus `/ozos-setup` and `./ozos setup`) is the living checklist for
+connecting sources, adding stakeholders and choosing a review cycle, with a progress badge
+and cadence reminders on Home. Data Hub and Goals are still empty states. Next up: goals
+(Phase 3), data points for the Data Hub (Phase 4), and the public README (Phase 5).
 
 ## License
 

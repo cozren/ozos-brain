@@ -39,15 +39,15 @@ candidate documents by tag; fall back to grep if the index is missing.
 app/                    — OZOS Brain: FastAPI backend (backend/) + React/Vite frontend (frontend/), tests in tests/ + backend/tests/
 tools/                  — Generic tools; one directory each with a .tool-manifest.json and tests/
   test-pipeline/        — Runs every suite + renders the pass/fail board; holds the git hooks
-  ozos-cli/             — The `ozos` command (init, scrub-check); `./ozos` at the root is its shim
+  ozos-cli/             — The `ozos` command (init, setup, scrub-check); `./ozos` at the root is its shim
   meeting-notes, daily-digest, intel-agents, youtube-xray, chatgpt-import, todo, scripts
-connectors/             — Optional clients a vault may enable: metabase/, atlassian-goals/
+connectors/             — Optional clients a vault may enable: metabase/, atlassian-goals/ (each with a setup.md the /ozos-setup skill reads)
 skills/                 — Shared Python used by more than one tool: ozos_llm.py (LLM client), run_log.py; capture-learning skill
 vault-template/         — What `ozos init` copies to create a new vault (example people, cycle, configs)
 vault/                  — Your data (gitignored). Override with OZOS_VAULT or ~/.ozos/config.json
 design-system/          — Visual design standards for the app
-docs/                   — Engine specs and plans only; company specs live in each vault
-.claude/                — Claude Code config: commands/, skills/, settings.json (hooks use $CLAUDE_PROJECT_DIR)
+docs/                   — Engine specs and plans only; docs/connectors/ = per-source setup guides; company specs live in each vault
+.claude/                — Claude Code config: commands/, skills/ (ozos-brain, ozos-setup), settings.json (hooks use $CLAUDE_PROJECT_DIR)
 graphify-out/           — Derived knowledge graph (gitignored; never edit manually)
 ```
 

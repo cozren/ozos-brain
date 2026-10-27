@@ -120,112 +120,90 @@ Never put any of these in the engine. Never commit `.env`.
 
 ---
 
-## 5. Connect sources, one at a time
+## 5. Connect sources, one at a time: the Setup page
 
-Until the Setup page ships (see section 9), connecting a source means editing a JSON
-file in `<vault>/.ozos/` and, for Google, running one auth command. Order below is
-the recommended one for a new job; skip anything the company does not use.
+Open **Setup** (first entry in the sidebar, right under the logo). It is a grouped
+checklist of everything a new company can feed into OZOS, in this order: You, Meeting
+notes, Chat & workspace, Boards, Documentation, People, Review cycle, Goals, Data,
+Insights. Each item shows what it is for, which vault file it writes, and a status chip:
+*Not started*, *In progress*, *Done*, *Skipped* or *Needs attention*. Nothing gates
+anything; the page is meant to stay half-done for weeks.
 
-### 5.1 Meeting notes from Gemini (Gmail)
+Three ways to work an item, all writing the same files:
 
-1. In Google Cloud, create an OAuth client (Desktop app) for your **new** Google
-   account, download the JSON and save it as `~/.gdrive-credentials.json`.
-2. Authorise once: `python3 tools/meeting-notes/sync_gemini_notes.py --auth`. The
-   token lands in `~/.config/ozos/meeting-notes-token.json`.
-3. Run it: `python3 tools/meeting-notes/sync_gemini_notes.py`. Notes arrive under
-   `<vault>/knowledge-hub/meeting-notes/<folder>/`.
+- **The item's form on the Setup page.** Short, one item at a time, and it writes the
+  right vault file for you (routing JSON, knowledge sources, `cycles.yaml`, a person's
+  `meta.yaml`, named `.env` variables). Secrets go straight into `<vault>/.env` and are
+  never shown again.
+- **`/ozos-setup` in a Claude Code session.** It reads the journal, lists what is left,
+  and walks you through ONE item conversationally using that connector's `setup.md`.
+  Add an item id to go straight to it: `/ozos-setup add-stakeholder`.
+- **`./ozos setup` in the terminal.** Prints the checklist; `./ozos setup mark <item>
+  done|skipped --notes "…"` records a status without the app.
 
-The SessionStart hook runs this sync every time you open Claude Code here. Before
-step 1 it prints one line, "Gmail not configured", and moves on.
+State lives in `<vault>/.ozos/setup.json`. The home page shows **Setup: N of M done**
+until you dismiss it; dismissing is remembered in the same file, and the Setup page stays
+in the sidebar.
 
-**Mirror notes into a Google Drive folder (optional).** Set
-`"drive_parent_folder_id": "<folder id>"` in `<vault>/.ozos/meeting-routing.json`
-and run `--auth` again (the scope widens from read-only to full Drive).
+What each group needs, in the recommended order for a new job:
 
-### 5.2 Meeting notes from Granola
+| Item | What you do | Guide |
+|---|---|---|
+| Your profile | Done by `ozos init` (name, person id, voice line). | — |
+| Gemini notes via Gmail | Save the OAuth client JSON, run the auth command the page shows, optionally enter a Drive folder id. | `docs/connectors/gmail-gemini-notes.md` |
+| Granola | Enable the Granola MCP in Claude Code, run `/sync-notes` once. | `docs/connectors/granola.md` |
+| Routing folders | Type the folders a note may land in, one per line, plus a tagging guide. | — |
+| Slack, Google Workspace, Figma, Miro | Run `/mcp` in Claude Code, enable and authenticate; the page shows *Connected* on the next app start. | — |
+| Confluence | Enter email, API token and subdomain; the page writes the three `ATLASSIAN_*` lines. | `connectors/atlassian-goals/setup.md` |
+| Notion/wiki exports, PDF drop folder, interviews, surveys | Name a folder; it is created under `knowledge-hub/` and registered as a knowledge source. | — |
+| Add a stakeholder | See section 6. | — |
+| Review cycle | See section 7. | — |
+| Goals, First data point | Placeholders until Phases 3 and 4; skipping them is fine. | `connectors/atlassian-goals/setup.md`, `connectors/metabase/setup.md` |
 
-Nothing to configure. In a Claude Code session run `/sync-notes`; it fetches
-Granola meetings through the MCP and feeds them to the same pipeline.
+A *Done* meeting-notes item flips to **Needs attention** by itself when the
+`meeting-notes` vital on the Control Tower fails or goes stale, so a broken token shows up
+on the Setup page without anyone checking.
 
-### 5.3 Routing: which folder a note lands in
-
-`<vault>/.ozos/meeting-routing.json` (a commented example sits next to it):
-
-```json
-{
-  "folders": ["Growth team", "Platform team", "Leadership", "Other"],
-  "default_folder": "Other",
-  "person_folders": { "pat@newco.com": "Pat Example" },
-  "group_rules": [
-    { "folder": "Leadership", "members": ["pat", "sam", "you"], "min_present": 3 }
-  ],
-  "drive_parent_folder_id": null,
-  "tagging_guide": "Tag product talk as <Product>/<topic>; tag people as <Team>/<FirstName>."
-}
-```
-
-- `folders`: the categories the LLM may pick from. Start with teams you already know.
-- `person_folders`: attendee email → a virtual folder that collects every meeting
-  that person was invited to.
-- `group_rules`: when at least `min_present` of these first names are in a meeting,
-  the note is rerouted to that folder (your leadership team, for example).
-- `tagging_guide`: free text appended to the tagging prompt as you learn the
-  company's teams, products and people.
-
-### 5.4 Confluence, Notion, wikis
-
-Confluence search works in the chat once the three `ATLASSIAN_*` variables are set.
-For any documentation you can export as Markdown or PDF, drop it into a folder
-under `<vault>/knowledge-hub/` and it appears in the Knowledge Hub. Register the
-folder in `<vault>/.ozos/knowledge-sources.json` only if it is outside
-`knowledge-hub/` (the template already registers `docs/`).
-
-### 5.5 Goals
-
-The Atlassian Goals connector is wired as a project MCP server (`.mcp.json`) and
-needs `ATLASSIAN_ORG_ID` and `ATLASSIAN_CLOUD_ID`. A Goals page in the app arrives
-with Phase 3.
-
-### 5.6 Daily digest and intel agents
-
-- **Daily digest** runs on demand with `python3 tools/daily-digest/digest.py`
-  (or `/daily-digest`). To schedule it, copy
-  `tools/daily-digest/com.ozos.daily-digest.plist` to `~/Library/LaunchAgents/`
-  and replace the `/ABSOLUTE/PATH/TO/...` placeholders.
-- **Intel agents** read `<vault>/.ozos/intel-agents.json`. Edit the example agent
-  (set `"enabled": true`), set `voice_text` to how you write, and run `/intel-run
-  <agent-id>` in a session, or `python3 tools/intel-agents/run.py <agent-id>` (uses
-  the `claude` CLI for web search).
-
-### 5.7 Data (Metabase)
-
-Set the `METABASE_*` variables. The connector is a read-only client you can call
-from scripts and the chat; the Data Hub stays an empty canvas until data points
-arrive in Phase 4.
+Daily digest and intel agents are not setup items: the digest runs with
+`python3 tools/daily-digest/digest.py` (or `/daily-digest`); intel agents read
+`<vault>/.ozos/intel-agents.json` and run with `/intel-run <agent-id>`.
 
 ---
 
 ## 6. Add people as you meet them
 
-For each person you manage or work closely with:
+Setup → People → **Add a stakeholder**: name, person id (slugged from the name), email,
+team folder, a *member of leadership group* checkbox, and manager. One save does all of
+this in a single backend call:
 
-1. Create `<vault>/people-hub/people/<id>/meta.yaml` (copy
-   `example-report/meta.yaml`; the folder name is the id). Or use **People Hub →
-   Add person** in the app.
-2. Add them to `meeting-routing.json`: their email under `person_folders`, and
-   their team under `folders` if it is new.
-3. Delete the `example-report` folder once you have a real person.
+1. creates `<vault>/people-hub/people/<id>/meta.yaml` (start date = today),
+2. maps their email to a person folder in `meeting-routing.json` so every meeting they
+   attend is labelled with their name,
+3. adds the team folder to the routing folders if it is new,
+4. when the checkbox is on, adds their first name to the `Leadership` group rule
+   (created with `min_present: 3` the first time), so notes with three or more leaders
+   present are rerouted to the Leadership folder,
+5. records a sub-row under the item and deletes the `example-report` person the first
+   time a real person is added.
 
 Expect this to take a month. The app is fine with two people today and twenty later.
+People Hub → Add person still works for a person who needs no routing.
 
 ---
 
 ## 7. Review cycle
 
-`<vault>/people-hub/cycles.yaml` holds an example cycle with empty dates. If the
-company has a review cycle, rename it and fill in the stage dates. If it does not,
-leave the example as a reminder of the recommended default: a monthly 1:1 note check
-and a quarterly written reflection per report. Guided cycle setup arrives in Phase 3.
+Setup → Review cycle offers two buttons:
+
+- **Company cycle**: a name, a type (`deep-dive` or `light-touch`) and stages with dates.
+  Saving writes `<vault>/people-hub/cycles.yaml`, replaces the example cycle and makes
+  the new one active.
+- **Use default cadence**: when the company has no formal cycle. The recommended default
+  is a monthly 1:1 note check and a quarterly written reflection per report. It is stored
+  in `setup.json` and rendered on the home page as a reminder list with the next due dates
+  (first day of next month and of next quarter), computed from the clock each time.
+
+Either choice marks the item done; you can reopen it later.
 
 ---
 
@@ -243,10 +221,9 @@ and a quarterly written reflection per report. Guided cycle setup arrives in Pha
 
 ## 9. What is not here yet
 
-The Setup page in the app, with a grouped checklist of everything above and a
-`/ozos-setup` skill that walks you through one item at a time, is Phase 2 of the
-design. Until then this file is the checklist. Phases 3 to 5 add guided review-cycle
-setup, goals, data points for the Data Hub, and the public README.
+Phases 3 to 5 of the design: a Goals page (by hand or from the Atlassian Goals connector),
+data points for the Data Hub (Metabase card, SQL or CSV), and the public README. Their
+Setup items exist as placeholders you can skip.
 
 ---
 
@@ -263,3 +240,67 @@ setup, goals, data points for the Data Hub, and the public README.
   the vault. Never use `--no-verify`.
 - **Knowledge Hub is empty** — it lists `<vault>/knowledge-hub/*`; put a Markdown
   file there and reload.
+- **A Setup item says "Needs attention"** — its vital failed or is stale; open the
+  Control Tower, run the vital, and the chip recovers on its own.
+- **An MCP item stays "Not detected yet"** — the app reads `claude mcp list` once at
+  start (`app/run.sh` caches it); authenticate in `/mcp`, then restart `app/run.sh`.
+
+---
+
+## A. JSON reference
+
+Everything the Setup page writes can also be edited by hand. The files live in
+`<vault>/.ozos/` unless noted.
+
+### A.1 `setup.json`
+
+```json
+{
+  "items": { "granola": { "status": "skipped", "updated_at": "2026-…", "notes": "" } },
+  "badge_dismissed": false,
+  "cadence": null
+}
+```
+
+Statuses: `not_started`, `in_progress`, `done`, `skipped`; `needs_attention` is derived,
+never stored. `cadence` is `{"mode": "company", "cycle_id": "…"}` or
+`{"mode": "default", …}`. Item ids are listed by `./ozos setup --json`.
+
+### A.2 `meeting-routing.json` (a commented example sits next to it)
+
+```json
+{
+  "folders": ["Growth team", "Platform team", "Leadership", "Other"],
+  "default_folder": "Other",
+  "person_folders": { "pat@newco.com": "Pat Example" },
+  "group_rules": [
+    { "folder": "Leadership", "members": ["pat", "sam", "you"], "min_present": 3 }
+  ],
+  "drive_parent_folder_id": null,
+  "tagging_guide": "Tag product talk as <Product>/<topic>; tag people as <Team>/<FirstName>."
+}
+```
+
+- `folders`: the categories the LLM may pick from.
+- `person_folders`: attendee email → a virtual folder that collects every meeting that
+  person was invited to.
+- `group_rules`: when at least `min_present` of these first names are in a meeting, the
+  note is rerouted to that folder.
+- `drive_parent_folder_id`: set it to mirror notes into a Google Drive folder, then run
+  `python3 tools/meeting-notes/sync_gemini_notes.py --auth` again (the scope widens).
+- `tagging_guide`: free text appended to the tagging prompt.
+
+### A.3 `knowledge-sources.json`
+
+Folders under `<vault>/knowledge-hub/` are discovered automatically; an entry is only
+needed for a path outside it (the template registers `docs/`) or to set a `mode`
+(`"labels"` for meeting notes). Drop-folder items add an entry for a stable label.
+
+### A.4 `people-hub/cycles.yaml` and `people-hub/people/<id>/meta.yaml`
+
+See `vault-template/people-hub/` for both shapes with a comment on every field.
+
+### A.5 `.env`
+
+The Setup page writes only `ATLASSIAN_EMAIL`, `ATLASSIAN_TOKEN` and
+`ATLASSIAN_SUBDOMAIN`. Everything else in section 4 is edited by hand.

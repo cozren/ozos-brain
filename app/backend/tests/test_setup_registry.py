@@ -103,3 +103,12 @@ def test_setup_docs_exist_with_the_four_sections():
         positions = [text.find(h) for h in _DOC_HEADINGS]
         assert all(p >= 0 for p in positions), (rel, positions)
         assert positions == sorted(positions), rel
+
+
+def test_setup_guide_describes_the_setup_page():
+    guide = (REPO_ROOT / "docs" / "SETUP.md").read_text(encoding="utf-8")
+    assert "Setup page" in guide and "/ozos-setup" in guide
+    assert "Until the Setup page ships" not in guide
+    assert "## A. JSON reference" in guide
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "Phase 2" in readme and "Setup page" in readme
