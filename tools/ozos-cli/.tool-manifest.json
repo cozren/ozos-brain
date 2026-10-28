@@ -1,6 +1,6 @@
 {
   "name": "ozos-cli",
-  "description": "The `ozos` command: init (create a vault + user config) and scrub-check (no company terms in the engine)",
+  "description": "The `ozos` command: init (create a vault + user config) setup, datapoints refresh, and scrub-check (no company terms in the engine tree; --history scans every commit)",
   "output_dir": null,
   "output_glob": null
 }

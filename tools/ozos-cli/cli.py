@@ -4,6 +4,7 @@
     ozos setup         print the setup journal (what is connected, what is left); --json for scripts
     ozos setup mark    ozos setup mark <item> <status> [--notes TEXT]
     ozos scrub-check   fail if any forbidden term (company names, people, hosts, ids) is in the engine tree
+    ozos scrub-check --history   the same scan over every commit's diff (run before making a repo public)
 
 Run through the `ozos` shim at the engine root. No dependencies beyond the stdlib.
 """
@@ -15,6 +16,7 @@ import getpass
 import json
 import os
 import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -343,11 +345,69 @@ def scrub_check(
     return hits
 
 
+def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
+    """Scan every commit's diff (all refs) for the terms. Returns one
+    (short sha, term, matching line count) per commit and term, oldest commit first.
+    Raises RuntimeError when `repo` is not a git repository."""
+    terms = load_terms(terms_file)
+    probe = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--git-dir"], capture_output=True, text=True
+    )
+    if probe.returncode != 0:
+        raise RuntimeError(f"not a git repository: {repo}")
+    log = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "log",
+            "--all",
+            "--reverse",
+            "-p",
+            "--no-color",
+            "--format=%x00%H",
+        ],
+        capture_output=True,
+        text=True,
+        errors="replace",
+    )
+    if log.returncode != 0:
+        raise RuntimeError(log.stderr.strip() or "git log failed")
+    hits: list[tuple[str, str, int]] = []
+    for chunk in log.stdout.split("\x00")[1:]:  # each chunk: "<sha>\n<diff…>"
+        sha, _, diff = chunk.partition("\n")
+        counts: dict[str, int] = {}
+        for line in diff.splitlines():
+            low = line.lower()
+            for term in terms:
+                if term in low:
+                    counts[term] = counts.get(term, 0) + 1
+        for term, n in counts.items():
+            hits.append((sha[:12], term, n))
+    return hits
+
+
 def scrub(args: argparse.Namespace) -> int:
     terms_file = Path(args.terms).expanduser()
     root = Path(args.root).resolve()
     if not terms_file.is_file():
         print(f"WARNING: no scrub term list at {terms_file}; check skipped")
+        return 0
+    if args.history:
+        try:
+            history_hits = scrub_history(root, terms_file)
+        except RuntimeError as exc:
+            print(f"scrub-check --history: {exc}", file=sys.stderr)
+            return 2
+        for sha, term, n in history_hits:
+            print(f"{sha}: {term} ({n} line(s))")
+        if history_hits:
+            print(
+                f"scrub-check --history: {len(history_hits)} hit(s) — history rewrite needed; "
+                "see SECURITY.md"
+            )
+            return 1
+        print("scrub-check: history clean")
         return 0
     hits = scrub_check(root, terms_file)
     for path, no, term in hits:
@@ -407,6 +467,11 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("scrub-check", help="fail if forbidden terms appear in the engine tree")
     s.add_argument("--terms", default=str(HOME / ".ozos" / "scrub-terms.txt"))
     s.add_argument("--root", default=str(ENGINE_ROOT))
+    s.add_argument(
+        "--history",
+        action="store_true",
+        help="scan every commit's diff (git log -p --all) instead of the working tree",
+    )
     s.set_defaults(func=scrub)
     return p
 
