@@ -6,3 +6,6 @@ its PRDs, learnings, dashboards, people — belongs in that company's vault unde
 `docs/`, never here.
 
 `SETUP.md` is the day-one guide for starting OZOS at a new company.
+
+`images/` holds the README screenshots, shot from the demo vault with
+`tools/scripts/shoot-demo.sh`.

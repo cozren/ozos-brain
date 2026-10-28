@@ -122,13 +122,15 @@ def test_setup_guide_describes_the_setup_page():
     # Phase 3: the guide has a Goals section and a goals.json reference.
     assert "## 8. Goals" in guide and "### A.6 `goals.json`" in guide
     assert "Placeholders until Phases 3 and 4" not in guide
-    assert "Phase 3" in readme and "Goals" in readme
+    assert "Goals" in readme
     app_readme = (REPO_ROOT / "app" / "README.md").read_text(encoding="utf-8")
     assert "arrive in Phase 3" not in app_readme and "/api/goals" in app_readme
     # Phase 4: the guide has a Data points section and a datapoints.json reference.
     assert "## 9. Data points" in guide and "### A.7 `datapoints.json`" in guide
     assert "Placeholder until Phase 4" not in guide and "Phases 4 and 5" not in guide
-    assert "Phase 4" in readme and "data point" in readme.lower()
+    assert "data point" in readme.lower()
+    # Phase 5: the guide no longer defers anything to a phase.
+    assert "Phase 5" not in guide
     assert "/api/datapoints" in app_readme
     # Phase 5: the Setup row has only Delete; manual refresh is the tile icon or the CLI.
     assert "or the point's row on Setup" not in guide

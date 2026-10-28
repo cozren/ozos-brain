@@ -44,6 +44,7 @@ tools/                  — Generic tools; one directory each with a .tool-manif
 connectors/             — Optional clients a vault may enable: metabase/, atlassian-goals/ (each with a setup.md the /ozos-setup skill reads)
 skills/                 — Shared Python used by more than one tool: ozos_llm.py (LLM client), run_log.py; capture-learning skill
 vault-template/         — What `ozos init` copies to create a new vault (example people, cycle, configs)
+vault-demo/             — A fictional company (Brightfold) that `ozos init --demo` copies; the README screenshots come from it
 vault/                  — Your data (gitignored). Override with OZOS_VAULT or ~/.ozos/config.json
 design-system/          — Visual design standards for the app
 docs/                   — Engine specs and plans only; docs/connectors/ = per-source setup guides; company specs live in each vault

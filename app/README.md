@@ -26,7 +26,7 @@ remove the flag; by default it reloads on edit.
 | Setup | The onboarding checklist: connect sources, add stakeholders, pick a review cycle (`/api/setup`) |
 | Goals & Tasks | Goals by hand or synced from Atlassian (`/api/goals`, `<vault>/.ozos/goals.json`), each bindable to a data point, plus personal tasks |
 | Data Hub | User-defined tabs of tiles showing data points (`/api/datapoints`, `<vault>/.ozos/datapoints.json`, values cached in `.ozos/datapoint-cache/`) |
-| Reporting | Daily digest, meeting notes archive, intel agents |
+| Insights Hub (Reporting) | Daily digest, meeting notes archive, intel agents; a source with no instances yet shows an empty state |
 | Control Tower / System Health | Vitals, MCPs, commands, hooks, test board |
 | Floating chat | Claude tool loop over the vault (people, notes, Confluence) |
 

@@ -58,6 +58,10 @@ pip3 install -r requirements.txt
 (cd app/frontend && npm ci)
 ```
 
+Want to see a populated app before setting up your own? `./ozos init --demo` creates a
+vault for Brightfold, a fictional company, and `bash app/run.sh` shows it. Delete that
+vault (or re-run `init --force`) before the real one.
+
 Create your vault and user config. The scrub list argument is the file from step 0:
 
 ```bash
@@ -303,8 +307,7 @@ and the item reads **Needs attention** until a refresh succeeds.
 
 ## 11. What is not here yet
 
-Phase 5 of the design: the README for strangers, a demo vault for screenshots, and the flip
-to public. Data Hub tabs cannot be renamed or deleted from the page yet (edit
+Data Hub tabs cannot be renamed or deleted from the page yet (edit
 `<vault>/.ozos/datahub.json`).
 
 ---
