@@ -163,3 +163,11 @@ def test_init_copies_scrub_terms_when_given(tmp_path, monkeypatch):
     rc = main(_init_args(tmp_path, "v", ["--scrub-terms", str(src)]))
     assert rc == 0
     assert (tmp_path / ".ozos" / "scrub-terms.txt").read_text() == "examplecorp\n"
+
+
+def test_template_gitignore_keeps_user_data_in_git():
+    ignored = (TEMPLATE / ".gitignore").read_text()
+    assert ".env" in ignored and ".ozos/datapoint-cache/" in ignored
+    # personal tasks and knowledge stars are vault data, not regenerated runtime files
+    assert ".ozos/personal-tasks.json" not in ignored
+    assert ".ozos/knowledge-stars.json" not in ignored
