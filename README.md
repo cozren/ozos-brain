@@ -58,8 +58,9 @@ in one sitting; the app runs fine half set up for weeks.
 
 ![Home](docs/images/home.png)
 
-The brain. Below it, your name, the vitals at a glance and the setup progress until you
-dismiss it.
+The brain, and the way in. While setup is underway a **Setup: N of M done** badge sits
+here until you dismiss it, and the default review cadence shows its next due dates. The demo
+has finished setup, so it shows the quiet version.
 
 ### Setup
 

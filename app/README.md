@@ -20,7 +20,7 @@ remove the flag; by default it reloads on edit.
 
 | Page | What it is |
 |---|---|
-| Home | Brain visual, greeting (name from `ozos init`), vitals at a glance |
+| Home | Brain visual, the setup progress badge until dismissed, cadence reminders (default cadence) |
 | People Hub | People YAML under `<vault>/people-hub/`, review cycles, documents |
 | Knowledge Hub | Folder tree over `<vault>/knowledge-hub/` sources, tags, stars, preview |
 | Setup | The onboarding checklist: connect sources, add stakeholders, pick a review cycle (`/api/setup`) |
