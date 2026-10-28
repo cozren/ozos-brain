@@ -730,3 +730,14 @@ def test_run_vital_respects_a_fresh_lock(tmp_path, monkeypatch):
         r = client.post(f"{VITALS_BASE}/vitals/daily-digest/run")
         assert r.json()["state"] == "running"
         mock_run.assert_not_called()
+
+
+def test_session_model_follows_the_shared_llm_setting(monkeypatch):
+    import time
+    from backend.services import control_tower as ct
+    from backend.services.llm_client import model as shared_model
+
+    monkeypatch.setenv("OZOS_LLM_MODEL", "claude-test-1")
+    assert ct.load_session(time.time())["model"] == "claude-test-1"
+    monkeypatch.delenv("OZOS_LLM_MODEL")
+    assert ct.load_session(time.time())["model"] == shared_model()

@@ -815,6 +815,12 @@ def _parse_graphify_nodes() -> int | None:
 # ── Session ──────────────────────────────────────────────────────────
 
 
+def ozos_llm_default_model() -> str:
+    from .llm_client import model
+
+    return model()
+
+
 def load_session(session_start_time: float) -> dict:
     """Build session status. session_start_time is set when the app starts."""
     peon_ping = "off"
@@ -829,7 +835,7 @@ def load_session(session_start_time: float) -> dict:
         "durationSeconds": duration,
         "peonPing": peon_ping,
         "sessionsToday": 1,  # placeholder — wire to real log in future
-        "model": "claude-sonnet-4-6",
+        "model": os.environ.get("OZOS_LLM_MODEL") or ozos_llm_default_model(),
         "tokensThisSession": 0,  # placeholder — requires token tracking
         "tokensAllTime": 0,  # placeholder — requires token log
         "estimatedCostUsd": 0.0,

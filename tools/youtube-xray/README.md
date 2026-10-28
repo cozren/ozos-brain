@@ -55,7 +55,7 @@ knowledge-hub/ai-learning/
 | Component | Tool | Reason |
 |---|---|---|
 | Transcript extraction | `yt-dlp` | No API key needed, handles auto-captions |
-| AI summarisation | Anthropic SDK (`claude-sonnet-4-6`) | Native to OZOS stack |
+| AI summarisation | Anthropic SDK via the shared model (`OZOS_LLM_MODEL`, default `claude-sonnet-5-5`) | Native to OZOS stack |
 | Output format | Markdown `.md` | Readable by humans and AI, git-friendly |
 | Testing | `pytest` | Simple, standard |
 | Config | `python-dotenv` | Loads API key and base URL from `.env` |
@@ -111,7 +111,7 @@ This phase connects YouTube X-Ray to the broader OZOS Personal Assistant vision.
 - [x] Created `.env.example` as safe template
 - [x] Added `.env` to `.gitignore`
 - [x] Created `requirements.txt`
-- [x] Tested API connection — `claude-sonnet-4-6` responding correctly
+- [x] Tested API connection — the shared model responding correctly
 
 ### YouTube X-Ray build (next steps)
 - [x] Open OZOS in Cursor
@@ -146,7 +146,7 @@ In the tools/youtube-xray/ folder, build a Python script called xray_single.py t
 6. Saves the summary as summary.md in the same folder as the transcript
 
 Use the Anthropic client with api_key and base_url loaded from .env using python-dotenv.
-Use model claude-sonnet-4-6.
+Use the shared model (`OZOS_LLM_MODEL`, default `claude-sonnet-5-5`).
 Follow the rules in .cursorrules.
 Write pytest tests for all core functions.
 Run the tests before telling me the task is complete.
@@ -188,7 +188,7 @@ In the tools/youtube-xray/ folder, build a Python script called xray_channel.py 
 6. Prints progress as it runs: "Processing video 3/47: video title..."
 
 Use the Anthropic client with api_key and base_url loaded from .env using python-dotenv.
-Use model claude-sonnet-4-6.
+Use the shared model (`OZOS_LLM_MODEL`, default `claude-sonnet-5-5`).
 Follow the rules in .cursorrules.
 Add pytest tests for the new channel functions.
 Run all tests before telling me the task is complete.
