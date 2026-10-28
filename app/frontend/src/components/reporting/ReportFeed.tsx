@@ -54,6 +54,9 @@ function SingleSourceFeed({ sourceId, pollIntervalMs = 1500, onRemove }: ReportF
         if (!alive) return
         setSource(sources.find((s) => s.id === sourceId) ?? null)
         setInstances(list)
+        // A fresh vault has no instances yet: show an empty state instead of
+        // asking the backend for a "latest" it would 404 on.
+        if (list.length === 0) return
         const inst = await api.getReportInstance(sourceId, 'latest')
         if (!alive) return
         setInstance(inst)
@@ -190,6 +193,10 @@ function SingleSourceFeed({ sourceId, pollIntervalMs = 1500, onRemove }: ReportF
           )}
         </div>
       </header>
+
+      {!running && !error && source && instances.length === 0 && (
+        <div className="report-feed__hint">No {source.label} yet</div>
+      )}
 
       {running && (
         <div className="report-feed__hint">

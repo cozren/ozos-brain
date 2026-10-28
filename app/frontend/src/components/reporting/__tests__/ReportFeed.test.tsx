@@ -239,3 +239,18 @@ describe('ReportFeed', () => {
     expect(screen.getByRole('button', { name: /share/i })).toBeDisabled()
   })
 })
+
+describe('ReportFeed on a fresh vault', () => {
+  test('shows an empty state and never asks for "latest" when a source has no instances', async () => {
+    const api = await importApi()
+    api.getReportSources.mockResolvedValue([SOURCE])
+    api.getReportInstances.mockResolvedValue([])
+    api.getReportInstance.mockRejectedValue(new Error('Load report failed: 404'))
+
+    render(<ReportFeed sourceId="daily-digest" />)
+
+    expect(await screen.findByText('No Daily Digest yet')).toBeInTheDocument()
+    expect(api.getReportInstance).not.toHaveBeenCalled()
+    expect(screen.queryByText(/Load report failed/)).toBeNull()
+  })
+})
