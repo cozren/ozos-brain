@@ -157,3 +157,39 @@ def test_scrub_history_commit_boundaries_survive_nul_bytes_in_diffs(repo, tmp_pa
     terms.write_text("examplecorp\n")
     hits = scrub_history(repo, terms)
     assert hits == [(_git(repo, "rev-parse", "--short=12", "HEAD"), "examplecorp", 1)]
+
+
+def test_scrub_history_scans_commit_messages(repo, tmp_path):
+    _commit(repo, "a.txt", "clean\n", "mention ExampleCorp in the message only")
+    terms = tmp_path / "t.txt"
+    terms.write_text("examplecorp\n")
+    assert scrub_history(repo, terms) == [
+        (_git(repo, "rev-parse", "--short=12", "HEAD"), "examplecorp", 1)
+    ]
+
+
+def test_scrub_history_scans_author_and_committer_identity(repo, tmp_path):
+    (repo / "a.txt").write_text("clean\n")
+    _git(repo, "add", "a.txt")
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "-c",
+            "user.name=Pat ExampleCorp",
+            "-c",
+            "user.email=pat@examplecorp.test",
+            "commit",
+            "-q",
+            "-m",
+            "clean message",
+        ],
+        check=True,
+        capture_output=True,
+    )
+    terms = tmp_path / "t.txt"
+    terms.write_text("examplecorp\n")
+    hits = scrub_history(repo, terms)
+    assert len(hits) == 1 and hits[0][1] == "examplecorp"
+    assert hits[0][0] == _git(repo, "rev-parse", "--short=12", "HEAD")

@@ -5,7 +5,7 @@
     ozos setup         print the setup journal (what is connected, what is left); --json for scripts
     ozos setup mark    ozos setup mark <item> <status> [--notes TEXT]
     ozos scrub-check   fail if any forbidden term (company names, people, hosts, ids) is in the engine tree
-    ozos scrub-check --history   the same scan over every commit's diff (run before making a repo public)
+    ozos scrub-check --history   the same scan over every commit (diff, message, author); run before going public
 
 Run through the `ozos` shim at the engine root. No dependencies beyond the stdlib.
 """
@@ -371,8 +371,9 @@ _HISTORY_SENTINEL = "\x00\x00OZOS-SCRUB-COMMIT\x00\x00"  # what git then prints
 
 
 def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
-    """Scan every commit's diff (all refs) for the terms. Returns one
-    (short sha, term, matching line count) per commit and term, oldest commit first.
+    """Scan every commit (all refs) for the terms: its diff, its message and its author
+    and committer identity. Returns one (short sha, term, matching line count) per commit
+    and term, oldest commit first.
     Raises RuntimeError when `repo` is not a git repository."""
     terms = load_terms(terms_file)
     probe = subprocess.run(
@@ -390,7 +391,8 @@ def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
             "--reverse",
             "-p",
             "--no-color",
-            f"--format={_HISTORY_SENTINEL_FMT}%H",
+            # header: sha, author, committer, full message; then the diff
+            f"--format={_HISTORY_SENTINEL_FMT}%H%n%an <%ae>%n%cn <%ce>%n%B",
         ],
         capture_output=True,
         text=True,
@@ -500,7 +502,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument(
         "--history",
         action="store_true",
-        help="scan every commit's diff (git log -p --all) instead of the working tree",
+        help="scan every commit (diff, message, author identity; git log -p --all) instead of the tree",
     )
     s.set_defaults(func=scrub)
     return p

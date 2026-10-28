@@ -323,8 +323,8 @@ Data Hub tabs cannot be renamed or deleted from the page yet (edit
   `cat ~/.ozos/config.json`; env wins over config.
 - **Commit blocked by scrub-check** — a company term is in the engine; move it to
   the vault. Never use `--no-verify`.
-- **`scrub-check --history` reports a commit** — the term is in history even if the tree
-  is clean; rewrite history (`git filter-repo`), rotate anything that was a credential, and
+- **`scrub-check --history` reports a commit** — the term is in that commit's diff, message
+  or author line even if the tree is clean; rewrite history (`git filter-repo`), rotate anything that was a credential, and
   never flip the repo public first.
 - **Knowledge Hub is empty** — it lists `<vault>/knowledge-hub/*`; put a Markdown
   file there and reload.

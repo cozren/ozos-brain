@@ -23,7 +23,8 @@ a private one.
 
 `./ozos scrub-check` greps the engine tree for a term list kept **outside** the repo
 (`~/.ozos/scrub-terms.txt`); the pre-commit hook runs it. `./ozos scrub-check --history`
-runs the same list over every commit's diff; run it before making any fork public.
+runs the same list over every commit's diff, message and author identity; run it before
+making any fork public.
 
 ## Reporting a leak or a vulnerability
 
