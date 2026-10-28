@@ -16,7 +16,12 @@
               "refId": "weekly-bookings",
               "w": 8,
               "h": 8
-            },
+            }
+          ]
+        },
+        {
+          "id": "row-2",
+          "tiles": [
             {
               "i": "t3",
               "refId": null,
