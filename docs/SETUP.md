@@ -260,7 +260,7 @@ a second row it is read as the previous value and shown as a delta), **table** (
 the first 50 rows) and **line** (first column on x, second on y). Rows are capped at 1000 in
 the cache.
 
-Two cadences: **manual** (the tile's refresh icon, or the point's row on Setup) and
+Two cadences: **manual** (the tile's refresh icon, or `./ozos datapoints refresh --all`) and
 **daily**. Daily points refresh through the `datapoints-refresh` vital, which runs
 `./ozos datapoints refresh` (`--all` refreshes manual points too); run it from the Control
 Tower like any vital, and it shows *STALE* there after 24 hours. Nothing schedules it: a

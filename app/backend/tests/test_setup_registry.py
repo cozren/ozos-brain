@@ -130,6 +130,8 @@ def test_setup_guide_describes_the_setup_page():
     assert "Placeholder until Phase 4" not in guide and "Phases 4 and 5" not in guide
     assert "Phase 4" in readme and "data point" in readme.lower()
     assert "/api/datapoints" in app_readme
+    # Phase 5: the Setup row has only Delete; manual refresh is the tile icon or the CLI.
+    assert "or the point's row on Setup" not in guide
 
 
 def test_define_goals_is_a_real_item():
