@@ -185,3 +185,11 @@ def test_cache_never_holds_non_finite_numbers(dp_env):
     assert (
         "NaN" not in cache_path("a").read_text() and "Infinity" not in cache_path("a").read_text()
     )
+
+
+@pytest.mark.parametrize("bad", [5, "x", {"a": 1}])
+def test_load_datapoints_ignores_a_non_list_key(dp_env, bad):
+    f = datapoints.DATAPOINTS_FILE
+    f.parent.mkdir(parents=True)
+    f.write_text(json.dumps({"datapoints": bad}))
+    assert load_datapoints() == []

@@ -149,8 +149,11 @@ def load_datapoints() -> list[dict]:
         return []
     if not isinstance(loaded, dict):
         return []
+    raw = loaded.get("datapoints")
+    if not isinstance(raw, list):
+        return []
     points: list[dict] = []
-    for entry in loaded.get("datapoints") or []:
+    for entry in raw:
         if isinstance(entry, dict):
             point = _tolerant(entry)
             if point is not None:
