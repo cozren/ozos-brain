@@ -1,0 +1,32 @@
+{
+  "folders": [
+    "Product team",
+    "Clinic success",
+    "Leadership",
+    "Other"
+  ],
+  "default_folder": "Other",
+  "person_folders": {
+    "ingrid@brightfold.example.com": "Ingrid Solberg",
+    "omar@brightfold.example.com": "Omar Haddad",
+    "dana@brightfold.example.com": "Dana Whitlock",
+    "jonas@brightfold.example.com": "Jonas Feld",
+    "mei@brightfold.example.com": "Mei Tanaka",
+    "luca@brightfold.example.com": "Luca Moretti",
+    "harper@brightfold.example.com": "Harper Quinn"
+  },
+  "group_rules": [
+    {
+      "folder": "Leadership",
+      "members": [
+        "ingrid",
+        "omar",
+        "dana",
+        "sam"
+      ],
+      "min_present": 3
+    }
+  ],
+  "drive_parent_folder_id": null,
+  "tagging_guide": "Tag product talk as Product/<area> (Scheduling, Reminders, Onboarding); tag people as Team/<FirstName>."
+}

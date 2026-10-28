@@ -1,0 +1,32 @@
+{
+  "tabs": {
+    "Overview": {
+      "rows": [
+        {
+          "id": "row-1",
+          "tiles": [
+            {
+              "i": "t1",
+              "refId": "active-clinics",
+              "w": 4,
+              "h": 8
+            },
+            {
+              "i": "t2",
+              "refId": "weekly-bookings",
+              "w": 8,
+              "h": 8
+            },
+            {
+              "i": "t3",
+              "refId": null,
+              "w": 12,
+              "h": 6
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "pickerFolders": {}
+}

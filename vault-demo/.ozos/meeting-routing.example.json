@@ -1,0 +1,11 @@
+{
+  "_comment": "Example routing. Copy what you need into meeting-routing.json. Adding a stakeholder in Setup writes these entries for you.",
+  "folders": ["Team A", "Team B", "Leadership", "Other"],
+  "default_folder": "Other",
+  "person_folders": { "pat@example.com": "Pat Example" },
+  "group_rules": [
+    { "folder": "Leadership", "members": ["pat", "sam", "taylor"], "min_present": 3 }
+  ],
+  "drive_parent_folder_id": null,
+  "tagging_guide": "Tag product discussions as <Product>/<topic>. Tag people as <Team>/<FirstName>."
+}

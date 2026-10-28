@@ -1,0 +1,94 @@
+{
+  "items": {
+    "profile": {
+      "status": "done",
+      "updated_at": "2026-10-06T09:00:00",
+      "notes": ""
+    },
+    "gmail-gemini": {
+      "status": "skipped",
+      "updated_at": "2026-10-07T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "granola": {
+      "status": "skipped",
+      "updated_at": "2026-10-08T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "routing-folders": {
+      "status": "done",
+      "updated_at": "2026-10-09T09:00:00",
+      "notes": ""
+    },
+    "slack-mcp": {
+      "status": "skipped",
+      "updated_at": "2026-10-10T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "google-workspace-mcp": {
+      "status": "skipped",
+      "updated_at": "2026-10-11T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "figma-mcp": {
+      "status": "skipped",
+      "updated_at": "2026-10-12T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "miro-mcp": {
+      "status": "skipped",
+      "updated_at": "2026-10-13T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "confluence": {
+      "status": "skipped",
+      "updated_at": "2026-10-14T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "notion-or-wiki-drop-folder": {
+      "status": "skipped",
+      "updated_at": "2026-10-15T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "pdf-drop-folder": {
+      "status": "skipped",
+      "updated_at": "2026-10-16T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "add-stakeholder": {
+      "status": "done",
+      "updated_at": "2026-10-17T09:00:00",
+      "notes": ""
+    },
+    "define-cycle": {
+      "status": "done",
+      "updated_at": "2026-10-18T09:00:00",
+      "notes": ""
+    },
+    "define-goals": {
+      "status": "done",
+      "updated_at": "2026-10-19T09:00:00",
+      "notes": ""
+    },
+    "first-data-point": {
+      "status": "done",
+      "updated_at": "2026-10-06T09:00:00",
+      "notes": ""
+    },
+    "interviews-folder": {
+      "status": "skipped",
+      "updated_at": "2026-10-07T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    },
+    "surveys-folder": {
+      "status": "skipped",
+      "updated_at": "2026-10-08T09:00:00",
+      "notes": "Not used at Brightfold (demo)."
+    }
+  },
+  "badge_dismissed": true,
+  "cadence": {
+    "mode": "company",
+    "cycle_id": "mid-year-2026"
+  }
+}

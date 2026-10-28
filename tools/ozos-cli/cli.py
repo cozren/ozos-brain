@@ -1,6 +1,7 @@
 """`ozos` — set up and check an OZOS engine + vault.
 
     ozos init          create a vault from vault-template/, write ~/.ozos/config.json and the vault .env
+    ozos init --demo   the same from vault-demo/ (a fictional company) and refresh its data points
     ozos setup         print the setup journal (what is connected, what is left); --json for scripts
     ozos setup mark    ozos setup mark <item> <status> [--notes TEXT]
     ozos scrub-check   fail if any forbidden term (company names, people, hosts, ids) is in the engine tree
@@ -26,6 +27,8 @@ sys.path.insert(0, str(ENGINE_ROOT / "skills"))
 import ozos_vault  # noqa: E402
 
 TEMPLATE = ENGINE_ROOT / "vault-template"
+DEMO_TEMPLATE = ENGINE_ROOT / "vault-demo"  # a fictional company for demos and screenshots
+DEMO_USER = {"name": "Sam Avery", "me": "sam", "voice_text": "Plain, direct, short paragraphs."}
 HOME = Path.home()  # monkeypatched in tests
 DEFAULT_MODEL = "claude-sonnet-5-5"
 SCRUB_EXCLUDE = (
@@ -89,6 +92,12 @@ def _ask(prompt: str, default: str = "", secret: bool = False) -> str:
 
 
 def init(args: argparse.Namespace) -> int:
+    demo = bool(getattr(args, "demo", False))
+    if demo:  # non-interactive: the demo user, no key, the demo template
+        args.yes = True
+        args.name, args.me = DEMO_USER["name"], DEMO_USER["me"]
+        args.voice_text = DEMO_USER["voice_text"]
+        args.api_key, args.base_url, args.model = "", "", DEFAULT_MODEL
     name = args.name if args.yes else _ask("Your name", args.name or "")
     me = (
         args.me
@@ -132,7 +141,7 @@ def init(args: argparse.Namespace) -> int:
             )
             return 1
     try:
-        create_vault(TEMPLATE, vault)
+        create_vault(DEMO_TEMPLATE if demo else TEMPLATE, vault)
     except FileExistsError as exc:
         print(f"ozos init: {exc}", file=sys.stderr)
         return 1
@@ -143,7 +152,17 @@ def init(args: argparse.Namespace) -> int:
     scrub_dst = HOME / ".ozos" / "scrub-terms.txt"
     if args.scrub_terms:
         shutil.copyfile(Path(args.scrub_terms).expanduser(), scrub_dst)
-    print(f"✓ Vault created at {vault}")
+    if demo:
+        # Tiles show numbers on first open. A subprocess, like the vital: the app
+        # config binds the vault at import time, so this process must not import it.
+        subprocess.run(
+            [sys.executable, str(ENGINE_ROOT / "ozos"), "datapoints", "refresh", "--all"],
+            env={**os.environ, "OZOS_VAULT": str(vault)},
+            check=False,
+        )
+        print(f"✓ Demo vault (Brightfold, a fictional company) created at {vault}")
+    else:
+        print(f"✓ Vault created at {vault}")
     print(f"✓ User config written to {config_path}")
     if not api_key:
         print(
@@ -438,6 +457,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     i = sub.add_parser("init", help="create a vault and write your user config")
     i.add_argument("--yes", action="store_true", help="non-interactive; take values from flags")
+    i.add_argument(
+        "--demo",
+        action="store_true",
+        help="create the demo vault (vault-demo/, a fictional company) with no questions asked",
+    )
     i.add_argument("--name", default="")
     i.add_argument("--me", default="")
     i.add_argument("--vault", default=str(ENGINE_ROOT / "vault"))

@@ -1,0 +1,47 @@
+{
+  "goals": [
+    {
+      "id": "reach-500-active-clinics",
+      "title": "Reach 500 active clinics",
+      "description": "Clinics that booked at least one appointment in the month.",
+      "owner": "Mei Tanaka",
+      "status": "at_risk",
+      "progress": 48,
+      "target_date": "2026-12-31",
+      "source": "manual",
+      "external_id": null,
+      "data_point_id": "active-clinics",
+      "updated_at": "2026-10-20T09:00:00",
+      "synced_at": null
+    },
+    {
+      "id": "cut-clinic-onboarding-to-under-two-days",
+      "title": "Cut clinic onboarding to under two days",
+      "description": "From signed to first booking.",
+      "owner": "Luca Moretti",
+      "status": "on_track",
+      "progress": 70,
+      "target_date": "2026-11-30",
+      "source": "manual",
+      "external_id": null,
+      "data_point_id": null,
+      "updated_at": "2026-10-13T09:00:00",
+      "synced_at": null
+    },
+    {
+      "id": "ship-the-patient-reminders-rewrite",
+      "title": "Ship the patient reminders rewrite",
+      "description": "SMS and email reminders on the new scheduler.",
+      "owner": "Jonas Feld",
+      "status": "pending",
+      "progress": null,
+      "target_date": "2027-01-31",
+      "source": "manual",
+      "external_id": null,
+      "data_point_id": null,
+      "updated_at": "2026-10-06T09:00:00",
+      "synced_at": null
+    }
+  ],
+  "sync": null
+}

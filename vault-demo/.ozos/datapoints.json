@@ -1,0 +1,30 @@
+{
+  "datapoints": [
+    {
+      "id": "active-clinics",
+      "name": "Active clinics",
+      "source": {
+        "kind": "csv",
+        "path": "data/active-clinics.csv",
+        "column": "active_clinics"
+      },
+      "display": "number",
+      "refresh": "daily",
+      "unit": "clinics",
+      "created_at": "2026-10-06T09:00:00"
+    },
+    {
+      "id": "weekly-bookings",
+      "name": "Weekly bookings",
+      "source": {
+        "kind": "csv",
+        "path": "data/weekly-bookings.csv",
+        "column": null
+      },
+      "display": "line",
+      "refresh": "daily",
+      "unit": "bookings",
+      "created_at": "2026-10-06T09:00:00"
+    }
+  ]
+}

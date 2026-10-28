@@ -1,0 +1,25 @@
+{
+  "voice_text": "Plain, direct, short paragraphs.",
+  "agents": [
+    {
+      "id": "example-industry-pulse",
+      "name": "Example: Industry Pulse",
+      "purpose": "research",
+      "voice": "research",
+      "focus": "Describe the market or topic this agent should watch.",
+      "keywords": [
+        "your industry",
+        "a competitor",
+        "a technology"
+      ],
+      "sources_prefer": [
+        "Reuters",
+        "TechCrunch"
+      ],
+      "sources_avoid": [],
+      "searches_per_run": 6,
+      "enabled": false,
+      "created_at": "2026-01-01"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "sources": [
+    { "id": "meeting-notes", "label": "Meeting Notes", "path": "knowledge-hub/meeting-notes", "mode": "labels" },
+    { "id": "digests", "label": "Digests", "path": "knowledge-hub/digests" },
+    { "id": "ai-learning", "label": "AI Learning", "path": "knowledge-hub/ai-learning" },
+    { "id": "docs", "label": "Docs & PRDs", "path": "docs" }
+  ]
+}

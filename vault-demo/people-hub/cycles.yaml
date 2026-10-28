@@ -1,0 +1,19 @@
+# Brightfold runs a light-touch mid-year review (fictional dates).
+active_cycle: mid-year-2026
+cycles:
+  mid-year-2026:
+    name: Mid-year review 2026
+    type: light-touch
+    events:
+    - id: self-reflection
+      label: Self reflection
+      start: '2026-06-01'
+      end: '2026-06-12'
+    - id: manager-note
+      label: Manager note
+      start: '2026-06-15'
+      end: '2026-06-26'
+    - id: conversations
+      label: Review conversations
+      start: '2026-06-29'
+      end: '2026-07-10'
