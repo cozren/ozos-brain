@@ -142,3 +142,18 @@ def test_cli_history_not_a_repo_is_a_readable_error(tmp_path, capsys):
     rc = main(["scrub-check", "--history", "--terms", str(terms), "--root", str(tmp_path)])
     assert rc == 2
     assert "not a git repository" in capsys.readouterr().err
+
+
+def test_scrub_history_commit_boundaries_survive_nul_bytes_in_diffs(repo, tmp_path):
+    # git sniffs the first 8 kB for NUL to call a file binary; a NUL after that is diffed
+    # as text (a source file with a literal NUL inside a string does this). The term sits
+    # in a later file of the SAME commit, so a splitter that trips on the NUL misreports
+    # the commit.
+    (repo / "blob.txt").write_bytes(b"a" * 9000 + b"\nids.join('\x00') !== x\n")
+    (repo / "z.txt").write_text("ExampleCorp\n")
+    _git(repo, "add", "blob.txt", "z.txt")
+    _git(repo, "commit", "-q", "-m", "nul and term")
+    terms = tmp_path / "t.txt"
+    terms.write_text("examplecorp\n")
+    hits = scrub_history(repo, terms)
+    assert hits == [(_git(repo, "rev-parse", "--short=12", "HEAD"), "examplecorp", 1)]

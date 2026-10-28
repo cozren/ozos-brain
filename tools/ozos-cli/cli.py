@@ -345,6 +345,12 @@ def scrub_check(
     return hits
 
 
+# A lone NUL is not a safe commit separator: a text file with a literal NUL past
+# git's 8 kB binary sniff is diffed as text. Use a sentinel no diff contains.
+_HISTORY_SENTINEL_FMT = "%x00%x00OZOS-SCRUB-COMMIT%x00%x00"  # git --format escapes
+_HISTORY_SENTINEL = "\x00\x00OZOS-SCRUB-COMMIT\x00\x00"  # what git then prints
+
+
 def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
     """Scan every commit's diff (all refs) for the terms. Returns one
     (short sha, term, matching line count) per commit and term, oldest commit first.
@@ -365,7 +371,7 @@ def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
             "--reverse",
             "-p",
             "--no-color",
-            "--format=%x00%H",
+            f"--format={_HISTORY_SENTINEL_FMT}%H",
         ],
         capture_output=True,
         text=True,
@@ -374,7 +380,7 @@ def scrub_history(repo: Path, terms_file: Path) -> list[tuple[str, str, int]]:
     if log.returncode != 0:
         raise RuntimeError(log.stderr.strip() or "git log failed")
     hits: list[tuple[str, str, int]] = []
-    for chunk in log.stdout.split("\x00")[1:]:  # each chunk: "<sha>\n<diff…>"
+    for chunk in log.stdout.split(_HISTORY_SENTINEL)[1:]:  # each chunk: "<sha>\n<diff…>"
         sha, _, diff = chunk.partition("\n")
         counts: dict[str, int] = {}
         for line in diff.splitlines():
