@@ -45,3 +45,26 @@ def test_contributing_and_security_fit_a_screen():
     assert "pipeline.py" in c and "scrub-check" in c and "[tool-name]" in c
     s = security.read_text(encoding="utf-8")
     assert ".env" in s and "scrub-check --history" in s and "report" in s.lower()
+
+
+def test_package_json_names_the_project():
+    import json
+
+    pkg = json.loads((REPO_ROOT / "app" / "frontend" / "package.json").read_text(encoding="utf-8"))
+    assert pkg["name"] == "ozos-brain-frontend"
+    assert pkg["license"] == "MIT" and pkg["author"] == "cozren"
+    assert pkg["private"] is True
+
+
+def test_bug_report_template_exists():
+    tpl = REPO_ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.md"
+    assert tpl.is_file()
+    assert len(tpl.read_text(encoding="utf-8").splitlines()) <= 25
+    assert ".env" in tpl.read_text(encoding="utf-8"), "reminds not to paste credentials"
+
+
+def test_project_settings_enable_no_plugins():
+    import json
+
+    settings = json.loads((REPO_ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert "enabledPlugins" not in settings

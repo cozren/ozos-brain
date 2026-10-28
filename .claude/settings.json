@@ -28,13 +28,10 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/tools/test-pipeline/hooks/post-edit-tests.sh\"",
-            "statusMessage": "Running affected tool's tests…"
+            "statusMessage": "Running affected tool's tests\u2026"
           }
         ]
       }
     ]
-  },
-  "enabledPlugins": {
-    "brag@brag": true
   }
 }
