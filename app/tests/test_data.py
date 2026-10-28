@@ -37,3 +37,15 @@ def test_write_and_read_cycle_summary(tmp_data_dir):
     svc.write_cycle_summary("alex", "2026-deep-dive", data)
     result = svc.get_cycle_summary("alex", "2026-deep-dive")
     assert result["manager_rating"] == "meeting-expectations"
+
+
+def test_list_people_tolerates_an_empty_meta_yaml(tmp_data_dir):
+    from backend.services import data as svc
+
+    (tmp_data_dir / "people" / "blank").mkdir()
+    (tmp_data_dir / "people" / "blank" / "meta.yaml").write_text("")
+    (tmp_data_dir / "people" / "str").mkdir()
+    (tmp_data_dir / "people" / "str" / "meta.yaml").write_text("just a string\n")
+    people = {p["name"]: p for p in svc.list_people()}
+    assert "blank" in people and "str" in people
+    assert people["blank"]["name"] == "blank" and people["str"]["name"] == "str"

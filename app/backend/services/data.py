@@ -23,6 +23,8 @@ def list_people() -> list[dict]:
             if meta_file.exists():
                 with open(meta_file) as f:
                     meta = yaml.safe_load(f)
+                if not isinstance(meta, dict):
+                    meta = {}  # empty or non-mapping file: the folder name is all we know
                 meta["name"] = p.name  # always use directory name as the canonical id
                 result.append(meta)
     return result
